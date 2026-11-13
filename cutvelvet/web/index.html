@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cutvelvet — Review</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0c0d'/%3E%3Crect x='5' y='8' width='22' height='5' fill='%23ece7dc'/%3E%3Crect x='5' y='15' width='13' height='4' fill='%23ece7dc'/%3E%3Crect x='20' y='15' width='7' height='4' fill='%238d8a84'/%3E%3Crect x='5' y='21' width='22' height='3' fill='%238d8a84'/%3E%3C/svg%3E">
+<style>
+  :root { --bg:#0c0c0d; --panel:#151517; --line:#28282c; --ink:#ece7dc; --dim:#8d8a84; --keep:#5fbf8a; --fix:#e0a63a; --cut:#e0604f; --accent:#ece7dc; }
+  * { box-sizing: border-box; }
+  [hidden] { display:none !important; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font: 14px/1.45 "Satoshi", -apple-system, "Helvetica Neue", sans-serif; }
+  .shell { display:flex; flex-direction:column; height:100vh; }
+  .app { display:grid; grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); flex:1; min-height:0; }
+  #liveFrame, #newFrame { flex:1; min-height:0; width:100%; border:0; display:block; background:var(--bg); }
+  /* The three panes are stacked in the same box and stay laid out; a tab switch only flips which one is visible. Nothing is
+     re-laid-out on a switch (display:none would rebuild the whole pane each time), and each pane keeps its own scroll. */
+  .left { position:relative; min-width:0; overflow:hidden; }
+  .pane { position:absolute; inset:0; display:flex; flex-direction:column; gap:12px; min-width:0; overflow:auto; padding:16px 20px; scrollbar-gutter:stable; }
+  .left > .pane[hidden] { display:flex !important; visibility:hidden; pointer-events:none; }
+  .right { border-left:1px solid var(--line); overflow:auto; padding:0 0 60px; }
+  h1 { font: 400 26px/1 Didot, "Bodoni 72", serif; margin:0; letter-spacing:.01em; }
+  /* help flyout: beside the content, never over it */
+  #help { position:fixed; top:58px; right:0; bottom:0; width:340px; z-index:12; background:var(--panel); border-left:1px solid var(--line); overflow:auto; padding:18px 20px 40px; display:flex; flex-direction:column; gap:14px; }
+  #help h2 { font: 400 20px/1.2 Didot, "Bodoni 72", serif; margin:0; }
+  #help h3 { margin:6px 0 0; color:var(--dim); font-size:11px; font-weight:400; letter-spacing:.14em; text-transform:uppercase; }
+  #help p { margin:0; } #help ol, #help ul { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:5px; }
+  #help dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:4px 12px; } #help dt { font: 11.5px ui-monospace, Menlo, monospace; color:var(--ink); white-space:nowrap; } #help dd { margin:0; color:var(--dim); }
+  #help .loop { border:1px solid var(--line); border-radius:6px; padding:10px 12px; color:var(--dim); } #help .loop b { color:var(--ink); font-weight:400; }
+  #help .x { position:absolute; top:12px; right:12px; padding:2px 8px; }
+  .shell.helpopen .app, .shell.helpopen #liveFrame, .shell.helpopen #newFrame { margin-right:340px; }
+  .shell.helpopen #liveFrame, .shell.helpopen #newFrame { width:calc(100% - 340px); }
+  .shell.helpopen ~ .jobp { right:352px; }
+  #hint1 { position:fixed; z-index:13; top:66px; right:12px; background:var(--ink); color:#111; border-radius:6px; padding:7px 8px 7px 12px; font-size:13px; display:flex; gap:10px; align-items:center; box-shadow:0 8px 30px #000a; }
+  #hint1 button { padding:1px 8px; background:transparent; color:#111; border-color:#1114; }
+  /* get-started checklist: the Review tab of a project with no version yet */
+  .app.noversions { grid-template-columns: minmax(0, 1fr); } .app.noversions > .right { display:none; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .start { max-width:760px; display:flex; flex-direction:column; gap:14px; }
+  .start h2 { font: 400 26px/1.15 Didot, "Bodoni 72", serif; margin:6px 0 0; }
+  .start .lead { margin:0; font-size:15px; max-width:62ch; }
+  .start .aside { margin:6px 0 0; color:var(--dim); font-size:13px; max-width:70ch; }
+  .start code { font: 12.5px ui-monospace, Menlo, monospace; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:1px 6px; color:var(--ink); white-space:nowrap; }
+  .steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; border:1px solid var(--line); border-radius:8px; }
+  .steps li { display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-top:1px solid var(--line); }
+  .steps li:first-child { border-top:0; }
+  .steps .mk { flex:none; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); display:grid; place-items:center; font: 600 12px ui-monospace, Menlo, monospace; color:var(--dim); margin-top:1px; }
+  .steps li.done .mk { background:var(--keep); border-color:var(--keep); color:#08130c; }
+  .steps li.next .mk { border-color:var(--ink); color:var(--ink); }
+  .steps .bd { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .steps .bd b { font-weight:400; font-size:15px; color:var(--ink); } .steps .bd b small { color:var(--dim); font-size:12px; margin-left:6px; }
+  .steps .st { font-size:13px; color:var(--ink); } .steps li.done .st { color:var(--keep); } .steps .st.warn { color:var(--fix); }
+  .steps .ds { font-size:13px; color:var(--dim); max-width:64ch; }
+  .steps .ac { flex:none; display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
+  .steps .ac:empty { display:none; }
+  .steps .ac button { padding:6px 12px; } .steps .ac button[aria-disabled=true] { opacity:.45; cursor:default; }
+  .steps li.next .ac button:first-child:not([aria-disabled=true]) { background:var(--ink); color:#111; border-color:var(--ink); font-weight:600; }
+  @media (max-width: 640px) { .steps li { flex-wrap:wrap; } .steps .ac { width:100%; justify-content:flex-start; padding-left:40px; } }
+  .empty { border:1px dashed var(--line); border-radius:6px; padding:16px 18px; color:var(--dim); display:flex; flex-direction:column; gap:10px; align-items:flex-start; }
+  .empty b { color:var(--ink); font-weight:400; font-size:16px; }
+  @media (max-width: 900px) { #help { position:static; width:auto; border-left:0; border-top:1px solid var(--line); } .shell.helpopen .app, .shell.helpopen #liveFrame, .shell.helpopen #newFrame { margin-right:0; width:100%; } }
+  @keyframes pulse { 50% { opacity:.25; } }
+  @media (prefers-reduced-motion: reduce) { .chip.running i { animation:none; } }
+  .jobp { position:fixed; z-index:14; top:64px; right:12px; width:min(560px, calc(100vw - 24px)); background:var(--bg); box-shadow:0 12px 40px #000a; }
+  .lnk { padding:0; border:0; background:none; color:var(--ink); text-decoration:underline; text-underline-offset:3px; font:inherit; }
+  .cutline { color:var(--dim); font-size:12px; }
+  .prevnote { margin-top:6px; padding:6px 9px; border-left:2px solid var(--line); color:var(--dim); font-size:12.5px; white-space:pre-wrap; cursor:default; }
+  .prevnote b { font: 600 11px ui-monospace, Menlo, monospace; color:var(--ink); margin-right:6px; } .prevnote .vd { text-transform:capitalize; margin-right:6px; }
+  .prevnote .vd.keep { color:var(--keep); } .prevnote .vd.fix { color:var(--fix); } .prevnote .vd.cut { color:var(--cut); }
+  .top select, .ctl select { background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:5px 8px; font:inherit; }
+  video { width:100%; background:#000; border-radius:4px; display:block; }
+  .now { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .now .id { font: 600 13px/1 ui-monospace, Menlo, monospace; padding:6px 9px; border:1px solid var(--line); border-radius:5px; }
+  .now .name { font: 400 20px/1.1 Didot, serif; }
+  .now .tc { color:var(--dim); font: 12px ui-monospace, Menlo, monospace; margin-left:auto; }
+  .bar { position:relative; height:26px; background:var(--panel); border-radius:4px; overflow:hidden; cursor:pointer; }
+  .bar .seg { position:absolute; top:0; bottom:0; border-right:1px solid var(--bg); background:#232327; }
+  .bar .seg.keep { background:color-mix(in srgb, var(--keep) 55%, #111); } .bar .seg.fix { background:color-mix(in srgb, var(--fix) 60%, #111); } .bar .seg.cut { background:color-mix(in srgb, var(--cut) 60%, #111); }
+  .bar .seg span { position:absolute; left:4px; top:6px; font: 10px ui-monospace, Menlo, monospace; color:#fff9; pointer-events:none; }
+  .bar .head { position:absolute; top:0; bottom:0; width:2px; background:#fff; pointer-events:none; }
+  .ctl { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  button { font:inherit; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:7px 12px; cursor:pointer; }
+  button:hover { border-color:#4a4a50; }
+  button:disabled { opacity:.45; cursor:default; }
+  button.on { background:var(--ink); color:#111; border-color:var(--ink); }
+  .v button.on.keep { background:var(--keep); border-color:var(--keep); color:#08130c; }
+  .v button.on.fix { background:var(--fix); border-color:var(--fix); color:#181002; }
+  .v button.on.cut { background:var(--cut); border-color:var(--cut); color:#1a0503; }
+  .hint { color:var(--dim); font-size:12px; }
+  textarea, input[type=text] { width:100%; background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:9px 10px; font:inherit; }
+  textarea { resize:vertical; min-height:56px; }
+  input[type=text] { padding:7px 10px; }
+  textarea:focus, input:focus, button:focus-visible, select:focus-visible { outline:1px solid var(--ink); outline-offset:1px; }
+  label { display:block; color:var(--dim); font-size:11px; letter-spacing:.14em; text-transform:uppercase; margin:0 0 6px; }
+  .shot { padding:14px 18px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .shot.cur { background:var(--panel); box-shadow: inset 3px 0 0 var(--ink); }
+  .shot .h { display:flex; gap:10px; align-items:baseline; margin-bottom:8px; }
+  .shot .h b { font: 600 12px ui-monospace, Menlo, monospace; min-width:26px; }
+  .shot .h .n { flex:1; }
+  .shot .h .t { color:var(--dim); font: 11px ui-monospace, Menlo, monospace; }
+  .shot .v { display:flex; gap:6px; margin-bottom:8px; }
+  .shot .v button { padding:4px 10px; font-size:12px; }
+  .shot textarea { min-height:38px; font-size:13px; }
+  .rhead { position:sticky; top:0; background:var(--bg); padding:14px 18px 10px; border-bottom:1px solid var(--line); z-index:2; color:var(--dim); font-size:11px; letter-spacing:.14em; text-transform:uppercase; display:flex; justify-content:space-between; }
+  /* pins on a shot's note */
+  .pins { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; cursor:default; }
+  .pins:empty { display:none; }
+  .pin { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:3px 4px 3px 3px; max-width:100%; }
+  .shot.cur .pin { background:#0f0f11; }
+  .pin .pt { width:64px; height:36px; flex:none; border-radius:3px; background:#000 center/cover no-repeat; cursor:pointer; }
+  .pin .pl { font: 11px ui-monospace, Menlo, monospace; white-space:nowrap; cursor:pointer; }
+  .pin .pl small { color:var(--dim); font-size:11px; }
+  .pin input[type=text] { width:150px; min-width:60px; flex:1; padding:3px 6px; font-size:12px; background:transparent; border-color:transparent; }
+  .pin input[type=text]:hover, .pin input[type=text]:focus { border-color:var(--line); background:var(--panel); }
+  .pin .px { padding:1px 7px; border-color:transparent; background:transparent; color:var(--dim); font-size:15px; line-height:1.2; }
+  .pin .px:hover { color:var(--cut); border-color:var(--line); }
+  /* library */
+  .ltools input[type=text] { width:auto; flex:1; min-width:140px; }
+  .ltools .hint { white-space:nowrap; }
+  .folders { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .folders input[type=text] { width:auto; flex:1; min-width:200px; }
+  .fold { display:inline-flex; align-items:center; gap:4px; font: 12px ui-monospace, Menlo, monospace; border:1px solid var(--line); border-radius:6px; padding:3px 3px 3px 9px; color:var(--ink); }
+  .fold.missing { color:var(--cut); border-color:color-mix(in srgb, var(--cut) 50%, #111); }
+  .fold small { color:var(--dim); font-size:11px; }
+  .fold button { padding:0 6px; border-color:transparent; background:transparent; color:var(--dim); font-size:14px; }
+  .fold button:hover { color:var(--cut); }
+  .err { color:var(--cut); font-size:12px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap:12px 10px; }
+  .card { min-width:0; cursor:pointer; content-visibility:auto; contain-intrinsic-size:auto 170px; }   /* off-screen cards cost nothing to lay out or paint */
+  .card .th { position:relative; aspect-ratio:16/9; background:#000; border-radius:4px 4px 0 0; overflow:hidden; }
+  .card.sel .th { outline:1px solid var(--ink); outline-offset:1px; }
+  .card .th img, .card .th .sp { position:absolute; inset:0; margin:auto; display:block; }
+  .card .th img { width:100%; height:100%; object-fit:contain; }
+  .card .th .sp { background-repeat:no-repeat; display:none; }
+  .card .th.scrub .sp { display:block; } .card .th.scrub img { visibility:hidden; }
+  .card .th .hl { position:absolute; top:0; bottom:0; width:1px; background:#fffc; display:none; pointer-events:none; }
+  .card .th.scrub .hl { display:block; }
+  .card .th .d, .card .th .ht, .card .th .tag { position:absolute; bottom:4px; font: 10px ui-monospace, Menlo, monospace; background:#000b; color:var(--ink); padding:1px 5px; border-radius:3px; pointer-events:none; }
+  .card .th .d { right:4px; } .card .th .ht { left:4px; display:none; max-width:calc(100% - 8px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .card .th.scrub .ht { display:block; } .card .th.scrub .d { display:none; }
+  .card .th .tag { top:4px; bottom:auto; left:4px; color:#111; background:var(--cut); }
+  .card .th .nop { position:absolute; inset:0; display:grid; place-items:center; color:var(--dim); font-size:11px; }
+  .ub { position:relative; height:8px; background:#232327; border-radius:0 0 3px 3px; overflow:hidden; }
+  .ub i, .pbar i.u { position:absolute; top:0; bottom:0; min-width:2px; background:var(--fix); }
+  .ub i.clash, .pbar i.u.clash { background:var(--cut); }
+  .card .m { display:flex; gap:8px; align-items:baseline; margin-top:5px; }
+  .card .m b { font: 600 12px ui-monospace, Menlo, monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .card .m span { color:var(--dim); font: 10px ui-monospace, Menlo, monospace; margin-left:auto; white-space:nowrap; }
+  .card .q { color:var(--dim); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .prev { display:flex; flex-direction:column; gap:10px; padding-bottom:14px; border-bottom:1px solid var(--line); }
+  .prev video { max-height:48vh; }
+  .pbar { position:relative; height:26px; background:var(--panel); border-radius:4px; overflow:hidden; cursor:pointer; touch-action:none; }
+  .pbar i.u { top:auto; height:9px; bottom:0; opacity:.95; pointer-events:none; }
+  .pbar .head { position:absolute; top:0; bottom:0; width:2px; background:#fff; pointer-events:none; }
+  .prev .name { font-size:15px; font-family:inherit; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1; }
+  .prev .name a { color:inherit; }
+  .prev .warn { color:var(--fix); font-size:12px; }
+  .prev .ctl input[type=text] { width:auto; flex:1; min-width:140px; }
+  .legend { display:inline-flex; gap:10px; align-items:center; color:var(--dim); font-size:11px; }
+  .legend i { display:inline-block; width:14px; height:6px; border-radius:2px; background:var(--fix); margin-right:4px; vertical-align:middle; }
+  .legend i.c { background:var(--cut); }
+  /* machine meter + performance popover */
+  #perf { position:fixed; z-index:15; width:min(480px, calc(100vw - 24px)); max-height:calc(100vh - 80px); overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:10px; box-shadow:0 12px 40px #000a; }
+  #perf ul { margin:0; padding-left:18px; } #perf li { margin:2px 0; }
+  #perf h3 { margin:0; font: 400 18px/1.2 Didot, "Bodoni 72", serif; } #perf hr { border:0; border-top:1px solid var(--line); margin:6px 0; width:100%; }
+  .ag { display:flex; gap:9px; align-items:flex-start; padding:6px 8px; border:1px solid var(--line); border-radius:6px; cursor:pointer; margin:0; text-transform:none; letter-spacing:0; font-size:13px; color:var(--ink); }
+  .ag.on { border-color:var(--ink); } .ag input { margin:3px 0 0; accent-color:var(--ink); flex:none; }
+  .ag b { font-weight:400; color:var(--ink); } .ag small { display:block; color:var(--dim); font-size:11.5px; line-height:1.35; }
+  .ag .tag { font: 10px ui-monospace, Menlo, monospace; border:1px solid var(--line); border-radius:4px; padding:0 5px; margin-left:6px; color:var(--dim); white-space:nowrap; }
+  .ag .tag.ok { color:var(--keep); border-color:color-mix(in srgb, var(--keep) 45%, #111); } .ag .tag.no { color:var(--fix); border-color:color-mix(in srgb, var(--fix) 45%, #111); }
+  #agentList { display:flex; flex-direction:column; gap:6px; }
+  #agentCmd { font: 11.5px/1.5 ui-monospace, Menlo, monospace; min-height:74px; background:var(--bg); word-break:break-all; }
+  #agentModel { background:var(--bg); } #agentRuns { font: 11px/1.45 ui-monospace, Menlo, monospace; color:var(--dim); word-break:break-all; white-space:pre-wrap; }
+  #agentProj { border:1px solid color-mix(in srgb, var(--fix) 50%, #111); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; gap:6px; font-size:12.5px; }
+  #agentProj code { font: 11px/1.45 ui-monospace, Menlo, monospace; word-break:break-all; color:var(--ink); }
+  #agentResult.good { color:var(--keep); } #agentResult.bad { color:var(--cut); } #agentResult { font-size:12.5px; white-space:pre-wrap; }
+  #perfModes { display:flex; gap:6px; flex-wrap:wrap; align-items:stretch; }
+  #perfModes button { display:flex; flex-direction:column; align-items:flex-start; padding:6px 10px; background:var(--bg); }
+  #perfModes button small { font-size:11px; opacity:.7; }
+  #perfModes button.on { background:var(--ink); }
+  #perfModes .cust { display:flex; flex-direction:column; font-size:12px; color:var(--dim); border:1px solid var(--line); border-radius:6px; padding:5px 8px; }
+  #perfModes .cust.on { border-color:var(--ink); color:var(--ink); }
+  #perfModes input { width:4.5em; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:5px; padding:2px 6px; font:inherit; }
+  /* rules */
+  .rg { display:flex; flex-direction:column; gap:2px; margin-top:6px; }
+  .rule { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:6px; }
+  .rule:hover { background:var(--panel); }
+  .rule .tg { margin:4px 0 0; width:15px; height:15px; accent-color:var(--ink); flex:none; cursor:pointer; }
+  .rule .rb { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; color:var(--dim); }
+  .rule.on .rb { color:var(--ink); }
+  .rule .rt input { width:auto; padding:1px 6px; font:inherit; color:inherit; display:inline-block; }
+  .rule .rt input[type=number] { width:4.5em; background:var(--panel); border:1px solid var(--line); border-radius:5px; }
+  .rule .rt input[type=text] { width:15em; max-width:60%; }
+  .rule input.rtx, .rule input.rn { padding:3px 7px; background:transparent; border-color:transparent; color:inherit; }
+  .rule input.rn { font-size:12px; color:var(--dim); }
+  .rule:hover input.rtx, .rule:hover input.rn, .rule input.rtx:focus, .rule input.rn:focus { border-color:var(--line); background:var(--bg); }
+  .rule .chk { font: 10px ui-monospace, Menlo, monospace; color:var(--keep); border:1px solid color-mix(in srgb, var(--keep) 45%, #111); border-radius:4px; padding:0 5px; margin-left:8px; white-space:nowrap; }
+  .rule .px { padding:0 7px; border-color:transparent; background:transparent; color:var(--dim); font-size:15px; }
+  .rule .px:hover { color:var(--cut); border-color:var(--line); }
+  #rulesPane .ctl input[type=text] { width:auto; flex:1; min-width:200px; }
+  .mk { padding:2px 8px; font-size:11px; color:var(--dim); margin-top:6px; }
+  .shot .mk { display:none; } .shot.hasnote .mk { display:inline-block; }
+  /* run notes */
+  .run { display:flex; flex-direction:column; gap:10px; }
+  .runp { border:1px solid var(--line); border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+  .runp .st { font: 600 12px ui-monospace, Menlo, monospace; text-transform:uppercase; letter-spacing:.1em; }
+  .runp .st.running { color:var(--fix); } .runp .st.done { color:var(--keep); } .runp .st.failed, .runp .st.cancelled { color:var(--cut); }
+  .runp .sp { margin-left:auto; }
+  pre.log, pre.md { margin:0; font: 11.5px/1.5 ui-monospace, Menlo, monospace; white-space:pre-wrap; word-break:break-word; background:var(--panel); border-radius:4px; padding:8px 10px; max-height:230px; overflow:auto; color:var(--dim); }
+  pre.md { color:var(--ink); font-size:12.5px; max-height:300px; }
+  /* drop + copy progress */
+  #drop { position:fixed; inset:0; z-index:30; pointer-events:none; background:#0c0c0dd9; display:grid; place-items:center; border:2px dashed var(--ink); font: 400 24px/1.3 Didot, "Bodoni 72", serif; text-align:center; }
+  #drop small { display:block; font: 13px/1.5 "Satoshi", -apple-system, sans-serif; color:var(--dim); margin-top:8px; }
+  .upl { display:flex; gap:10px; align-items:center; border:1px solid var(--line); border-radius:6px; padding:8px 10px; }
+  .upl .t { flex:1; min-width:0; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .upl .pg { width:160px; height:6px; background:#232327; border-radius:3px; overflow:hidden; flex:none; }
+  .upl .pg i { display:block; height:100%; width:0; background:var(--ink); }
+  .upl button { padding:3px 10px; font-size:12px; }
+  #tip { position:fixed; z-index:20; pointer-events:none; background:#000e; color:var(--ink); border:1px solid var(--line); border-radius:4px; padding:3px 7px; font: 11px ui-monospace, Menlo, monospace; white-space:pre; }
+  /* ---- header: three groups — where am I · what am I looking at · what can I do ---- */
+  .top { display:flex; align-items:center; gap:24px; flex:none; height:58px; padding:0 24px; border-bottom:1px solid var(--line); white-space:nowrap; overflow:hidden; }
+  .top .g { display:flex; align-items:center; gap:8px; flex:none; }
+  .top .where { gap:24px; }
+  .top h1 { flex:none; max-width:26vw; overflow:hidden; text-overflow:ellipsis; font-size:24px; line-height:1.2; }
+  .top .div { width:1px; height:22px; background:var(--line); flex:none; }
+  .top .sp { flex:1; min-width:0; }
+  /* 1 · plain-text navigation */
+  .tabs { display:flex; gap:20px; align-items:stretch; height:58px; }
+  .tabs button { background:none; border:0; border-radius:0; padding:0 1px; color:var(--dim); font-size:14px; height:100%; border-bottom:2px solid transparent; border-top:2px solid transparent; }
+  .tabs button:hover { color:var(--ink); }
+  .tabs button.on { color:var(--ink); background:none; border-bottom-color:var(--ink); }
+  .tabs button:focus-visible { outline-offset:-3px; }
+  #tabLive.dirty::after { content:' •'; color:var(--fix); }
+  /* 2 · the version (or cut) being looked at */
+  .top .what .lbl { color:var(--dim); font-size:12px; width:52px; text-align:right; white-space:nowrap; }
+  .top .what select { width:150px; min-width:0; text-overflow:ellipsis; }
+  .top .what.dim select { opacity:.45; }
+  /* 3 · actions (two button styles only), then quiet status */
+  .top button.act { padding:6px 14px; }
+  .top button.primary { background:var(--ink); color:#111; border-color:var(--ink); font-weight:600; }
+  .top button[aria-disabled=true] { background:none; color:var(--dim); border-color:var(--line); font-weight:400; opacity:.6; cursor:default; }
+  .top button.icon { width:30px; height:30px; padding:0; border-radius:50%; display:inline-grid; place-items:center; flex:none; }
+  .top button.icon.on { background:var(--ink); color:#111; border-color:var(--ink); }
+  #helpBtn { font-weight:600; } #helpBtn.on { background:var(--ink); color:#111; }
+  .top .stat { gap:16px; color:var(--dim); font-size:12.5px; }
+  .top .stat .q { display:inline-flex; align-items:center; gap:7px; background:none; border:0; padding:4px 0; color:inherit; font:inherit; font-size:12.5px; }
+  .top .stat button.q:hover { color:var(--ink); }
+  .top .stat .q i { width:8px; height:8px; border-radius:50%; background:#4a4a50; flex:none; }
+  .saved { width:150px; justify-content:flex-end; overflow:hidden; cursor:pointer; } .saved:hover .w { text-decoration:underline; text-underline-offset:3px; } .saved .w { overflow:hidden; text-overflow:ellipsis; }
+  .saved i { display:none; } .saved.warn { color:var(--fix); } .saved.warn i { background:var(--fix); } .saved.bad { color:var(--cut); } .saved.bad i { background:var(--cut); }
+  /* machine meter: a live gauge (grey = everything on this computer, bright = cutvelvet's share) + the performance setting; reads as a control */
+  .top .stat button.meter { border:1px solid var(--line); border-radius:6px; padding:6px 10px; gap:8px; cursor:pointer; }
+  .top .stat button.meter:hover, .top .stat button.meter[aria-expanded=true] { border-color:var(--dim); color:var(--ink); }
+  .meter .gauge { position:relative; width:46px; height:8px; border-radius:4px; background:#232327; overflow:hidden; flex:none; }
+  .meter .gauge b { position:absolute; inset:0; transform-origin:left center; transform:scaleX(0); transition:transform 1.2s ease; will-change:transform; }
+  .meter #gAll { background:#5a5a61; } .meter #gOwn { background:var(--ink); }
+  .meter.working #gOwn { background:var(--fix); } .meter.heavy #gOwn { background:var(--cut); } .meter.heavy #gAll { background:#7a4a44; }
+  .meter.working, .meter.heavy { color:var(--ink); } .meter .car { opacity:.7; flex:none; }
+  /* The status group is the one part of the bar that gives way: the job chip shortens (its full text is in its tooltip)
+     before anything is pushed off the right edge. */
+  .top .stat { flex:0 1 auto; min-width:0; } .top .stat > * { flex:none; }
+  .top .stat > .chip { flex:0 1 auto; min-width:14px; max-width:230px; overflow:hidden; color:var(--ink); } .chip .w { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .chip i { background:var(--fix); } .chip.running i { animation: pulse 1.2s ease-in-out infinite; } .chip.done i { background:var(--keep); } .chip.failed i, .chip.cancelled i { background:var(--cut); }
+  .rhint { padding:8px 18px; border-bottom:1px solid var(--line); color:var(--fix); font-size:12.5px; }
+  /* under ~1200px the status words fold into their dots (the words stay in the tooltips) before anything else gives way */
+  @media (max-width: 1240px) { .top { gap:16px; padding:0 16px; } .top .where { gap:16px; } .tabs { gap:16px; } .top h1 { font-size:21px; } .top .stat { gap:12px; }
+    .top .stat .w { display:none; } .top .what select { width:132px; } }
+  /* Earlier steps, so the bar never runs off the right edge at laptop widths (1280, 1366): first the save state folds
+     into its glyph (the words stay in its tooltip), then the "Version" label goes. The job chip shrinks by itself. */
+  @media (max-width: 1440px) { .saved .w { display:none; } .saved { width:auto; } .saved i { display:block; width:auto !important; height:auto !important; background:none !important; font: 600 13px/1 ui-monospace, Menlo, monospace; font-style:normal; color:inherit; } .saved:not(.has) { visibility:hidden; } }
+  @media (max-width: 1320px) { .top .what .lbl { display:none; } .chip .w { display:none; } }
+  @media (max-width: 900px) { .left { overflow:visible; } .pane { position:static; overflow:visible; } .left > .pane[hidden] { display:none !important; }
+    .shell { height:auto; min-height:100vh; } .top { height:auto; flex-wrap:wrap; padding:10px 16px; white-space:normal; } .app { grid-template-columns: 1fr; } #liveFrame, #newFrame { min-height:100vh; } .right { border-left:0; border-top:1px solid var(--line); } }
+  /* dropdowns: our own caret, inset from the edge */
+  select:not([multiple]) { -webkit-appearance:none; appearance:none; padding-right:32px !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ece7dc' stroke-opacity='.75' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:10px 6px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top" id="top">
+    <div class="g where"><h1 id="title">cutvelvet</h1>
+      <nav class="tabs" role="tablist" aria-label="Sections"><button id="tabReview" role="tab" class="on" data-tip="Watch a version and write notes">Review</button><button id="tabLibrary" role="tab" data-tip="Your footage, and which parts are already used">Library</button><button id="tabRules" role="tab" data-tip="Your standing preferences for this project">Rules</button><button id="tabLive" role="tab" data-tip="Play and adjust the cut without rendering">Live</button></nav></div>
+    <i class="div"></i>
+    <div class="g what" id="pick"><label class="lbl" id="pickLbl" for="ver" style="margin:0;letter-spacing:0;text-transform:none">Version</label><select id="ver" aria-label="Version" data-tip="The version you are reviewing. Each Publish or Run adds the next one."></select><select id="ltl" aria-label="Cut" hidden data-tip="The cut Live is showing"></select><button id="tabNew" class="icon" aria-label="New cut" data-tip="New cut — start one from a song, footage and a brief">+</button></div>
+    <span class="sp"></span>
+    <div class="g act"><button id="run" class="act" aria-disabled="true">Run notes</button><button id="pub" class="act" aria-disabled="true">Publish</button></div>
+    <div class="g stat"><button class="q saved" id="saved" aria-live="polite"><i></i><span class="w" id="savedTxt"></span></button><button class="q meter" id="meter" aria-haspopup="dialog" aria-expanded="false"><span class="gauge" aria-hidden="true"><b id="gAll"></b><b id="gOwn"></b></span><span class="w" id="meterTxt">…</span><svg class="car" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="q chip" id="jobChip" hidden aria-haspopup="dialog"><i></i><span class="w" id="jobChipTxt"></span></button><button id="helpBtn" class="icon" aria-expanded="false" aria-controls="help" aria-label="Help for this tab" data-tip="Help for this tab ( ? )">?</button></div>
+  </header>
+<div class="app" id="app">
+  <div class="left">
+    <div class="pane" id="reviewPane">
+      <div class="start" id="emptyReview" hidden>
+        <h2>Get started</h2>
+        <p class="lead">cutvelvet cuts a short film out of footage you already have. An AI agent of your choosing builds the cut, you watch it and write notes, and it revises.</p>
+        <ol class="steps" id="steps" aria-label="Steps to a first version"></ol>
+        <p class="aside" id="startAside">Just looking around? The cutvelvet folder includes a finished example with notes on it. Stop this server, then from that folder run <code>cutvelvet serve example</code>. The <b>?</b> button at the top right explains each tab.</p>
+      </div>
+      <video id="v" controls playsinline preload="auto"></video>
+      <div class="bar" id="bar"><div class="head" id="head"></div></div>
+      <div class="now"><span class="id" id="cid">—</span><span class="name" id="cname"></span><span class="tc" id="tc"></span></div>
+      <div class="ctl">
+        <button id="loop" data-tip="Play the current shot over and over ( L )">Loop this shot</button>
+        <button id="stamp" data-tip="Pause and start a note on this shot, stamped with the current time ( N )">Note at this moment</button>
+        <button id="slow" data-tip="Play at half speed, to catch a single frame">½ speed</button>
+        <span class="hint">space play · ←/→ one frame · ↑/↓ shot · 1 keep · 2 fix · 3 cut · L loop · N note</span>
+      </div>
+      <div><label for="g">Overall notes — pacing, music, colour, type, anything that applies to the whole chapter</label><textarea id="g" rows="4"></textarea><div class="prevnote" id="prevOverall" hidden></div><button class="mk" id="gmk" hidden data-tip="Copy this note into your standing rules, to edit there">Make this a rule</button></div>
+      <span class="cutline" id="cutLine" hidden></span>
+      <span class="cutline" id="prevLine" hidden></span>
+      <div id="verChanges" hidden><label>What changed in this version</label><pre class="md"></pre></div>
+    </div>
+
+    <div class="pane" id="rulesPane" hidden>
+      <span class="hint">Your standing rules for this project. The ones switched on are given to the agent with every Run; the suggestions below are all off until you turn them on, and a project with no rules is fine.</span>
+      <div class="ctl"><input type="text" id="radd" placeholder="Add rule… type a preference in your own words and press Enter" aria-label="Add a rule"><span class="hint" id="rcount"></span><button id="rdefaults" data-tip="New projects will start from this rule set">Save as my defaults</button></div>
+      <span class="err" id="rerr"></span>
+      <div id="rules"></div>
+    </div>
+    <div class="pane" id="libPane" hidden>
+      <div class="prev" id="prev" hidden>
+        <video id="pv" controls playsinline muted preload="metadata"></video>
+        <div class="pbar" id="pbar"><div class="head" id="phead"></div></div>
+        <div class="now"><span class="id" id="pid">—</span><span class="name" id="pmeta"></span><span class="warn" id="pwarn"></span><span class="tc" id="ptc"></span></div>
+        <div class="ctl">
+          <label for="pshot" style="margin:0">Pin to shot…</label>
+          <select id="pshot" aria-label="Shot to pin to"></select>
+          <input type="text" id="pcomment" placeholder="Comment for this pin (optional)" aria-label="Pin comment">
+          <button id="ppin" data-tip="Attach this clip, at this moment, to the chosen shot's note ( P ). The agent will use it there.">Pin</button>
+          <button id="pclose" data-tip="Close the preview ( Esc )">Close</button>
+        </div>
+        <span class="hint">space play · ←/→ one frame · ↑/↓ shot · P pin at this moment · Esc close</span>
+      </div>
+      <div class="ctl ltools">
+        <span id="fmode"><button data-m="all" class="on" data-tip="Every clip">All</button> <button data-m="unused" data-tip="Clips no cut uses yet">Unused</button> <button data-m="used" data-tip="Clips at least one cut already uses">Used</button></span>
+        <input type="text" id="fq" placeholder="Filter by id, search term, file name…" aria-label="Filter clips">
+        <span class="hint" id="lcount"></span>
+        <button id="rescan" data-tip="Look through the footage folders again for new or changed files">Rescan</button>
+      </div>
+      <div class="folders"><span class="folders" id="folders"></span><button id="fpick" data-tip="Choose a footage folder on this computer. It is linked in place, nothing is copied.">Add folder…</button>
+        <input type="text" id="fpath" placeholder="…or paste a folder path" aria-label="Folder path to add"><button id="fadd" data-tip="Add the folder whose path you typed">Add path</button></div>
+      <span class="hint" id="fhint">Drop video files or folders anywhere on this page — dropped files are copied into footage/inbox; use Add folder… to link a folder in place.</span>
+      <div class="upl" id="upl" hidden><span class="t" id="uplText"></span><span class="pg"><i id="uplBar"></i></span><button id="uplCancel">Cancel</button></div>
+      <div class="ctl"><span class="legend" data-tip="The bar under each clip is its whole length. Coloured stretches are the seconds a cut already uses; hover one to see where."><span><i></i>already used in a cut</span><span><i class="c"></i>used more than once</span></span><span class="err" id="lerr"></span></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="rhead"><span>Shots</span><span id="count"></span></div>
+    <div class="rhint" id="runHint" hidden></div>
+    <div id="list"></div>
+  </div>
+</div>
+<iframe id="liveFrame" title="Live preview" hidden></iframe>
+<iframe id="newFrame" title="New cut" hidden></iframe>
+</div>
+<div class="runp jobp" id="jobPanel" hidden role="dialog" aria-label="Job progress">
+  <div class="ctl"><span class="st" id="runState"></span><span class="hint" id="runMeta"></span><span class="sp"></span>
+    <button id="runOpen" hidden></button><button id="runCancel">Cancel</button><button id="runHide">Close</button></div>
+  <span class="err" id="runErr"></span>
+  <pre class="log" id="runLog" aria-live="off"></pre>
+  <div id="runChanges" hidden><label>What the agent changed</label><pre class="md"></pre></div>
+</div>
+<div id="perf" hidden role="dialog" aria-label="Settings">
+  <h3>Performance</h3>
+  <div id="sysLines"></div>
+  <span class="hint" id="sysMachine"></span>
+  <label style="margin:4px 0 0">Performance — how much of this computer cutvelvet may use</label>
+  <div id="perfModes"></div>
+  <span class="hint" id="perfNote">Used for renders, Runs and thumbnails on this computer (not saved in the project). A render already under way picks it up for the shots it has not started. Light and Balanced also work at low priority, so other apps stay responsive.</span>
+  <span class="err" id="perfErr"></span>
+  <hr>
+  <h3 id="agentHead">Agent</h3>
+  <span class="hint">The coding agent that Run notes and New cut start on this computer. cutvelvet does not include one: you install it and sign in to it yourself, and cutvelvet starts it for you.</span>
+  <div class="empty" id="agentNone" hidden><b>No agent found on this computer</b><span id="agentNoneTxt"></span></div>
+  <div id="agentProj" hidden></div>
+  <div id="agentList" role="radiogroup" aria-label="Agent"></div>
+  <div><label for="agentModel">Model (optional)</label><input type="text" id="agentModel" autocomplete="off" spellcheck="false" placeholder="leave empty for the agent’s own default">
+    <span class="hint" id="agentModelNote"></span></div>
+  <span class="hint">cutvelvet never sees an API key or a login. It starts the agent you are already signed in to, and that agent’s provider bills you.</span>
+  <div><label for="agentCmd">The command that runs</label><textarea id="agentCmd" spellcheck="false" autocomplete="off" aria-describedby="agentCmdNote"></textarea>
+    <span class="hint" id="agentCmdNote"></span>
+    <div id="agentRuns"></div></div>
+  <div class="ctl"><button id="agentTest" data-tip="Sends one tiny prompt (“reply with the single word ok”) through this agent to check that it starts, is signed in and accepts the command. It is a real call and is billed like any other: about the cost of one short reply (10 to 30 cents with Claude Code when we tried it).">Test</button><button id="agentReset" data-tip="Put this agent’s command back to the one cutvelvet ships with">Reset to default</button><span class="hint" id="agentSaved"></span></div>
+  <span id="agentResult" aria-live="polite"></span>
+  <span class="err" id="agentErr"></span>
+</div>
+<aside id="help" hidden aria-label="Help"></aside>
+<div id="hint1" hidden><span>New here? The <b>?</b> button explains each tab.</span><button id="hint1x" aria-label="Dismiss">Got it</button></div>
+<div id="tip" hidden></div>
+<div id="drop" hidden><div>Drop to add to the library<small>Video files are copied into footage/inbox</small></div></div>
+<script>
+const $ = s => document.querySelector(s), v = $('#v'), FPS = 24;
+let shots = [], fb = { shots: {}, overall: '' }, cur = -1, loop = false, ver = '', timer;
+const fmt = t => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Save status, far right of the header. Each tab has its own; only Review and Live have anything to say.
+const savedBy = { review: ['', ''] };
+function setSaved(text, cls) { savedBy.review = [text, cls || '']; paintSaved(); }
+function paintSaved() {
+  const [text, cls] = tab === 'review' ? savedBy.review : tab === 'live' ? liveSaved() : ['', ''];
+  $('#saved i').textContent = cls === 'bad' ? '!' : cls === 'warn' ? '…' : /^no /i.test(text) ? '–' : '✓';   // the narrow-window stand-in for the words
+  $('#savedTxt').textContent = text; $('#saved').className = 'q saved ' + cls + (text ? ' has' : ''); $('#saved').dataset.tip = !text ? '' : tab === 'live' ? 'Live edits are saved when you press Save. Click here or press ⌘S to save now.' : 'Notes save automatically as you type. Click here or press ⌘S to save right now.';
+}
+const typing = () => ['TEXTAREA', 'SELECT', 'INPUT'].includes(document.activeElement.tagName);
+async function saveNow() { clearTimeout(timer); timer = null;
+  fb.version = ver; fb.savedAt = new Date().toISOString();
+  const r = await fetch('/save?f=' + ver, { method: 'POST', body: JSON.stringify(fb, null, 1) });
+  setSaved(r.ok ? 'Notes saved ' + clock() : 'Save failed', r.ok ? '' : 'bad'); return r.ok; }
+// One formatter, made once: toLocaleTimeString with options builds a new one on every call, which is slow.
+let clockFmt = null;
+const clock = (d = new Date()) => { try { clockFmt = clockFmt || new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' }); return clockFmt.format(d); } catch (e) { return ''; } };
+// Saving is automatic; the status doubles as a "save now" button (and ⌘S / Ctrl+S) for anyone who wants to be sure.
+async function saveByHand() {
+  if (tab === 'live') { const api = liveApi(); if (api && api.save) await api.save(); return; }
+  if (tab !== 'review' || !ver || (!timer && /^no /i.test(savedBy.review[0]))) return;
+  setSaved('Saving…', 'warn'); await saveNow();
+}
+document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's' && (tab === 'review' || tab === 'live')) { e.preventDefault(); saveByHand(); } }, true);
+function save() { setSaved('Saving…', 'warn'); clearTimeout(timer); timer = setTimeout(saveNow, 400); paintRun(); }
+function entry(id) { return fb.shots[id] ??= { verdict: '', note: '' }; }
+function paint() {
+  shots.forEach((s, i) => {
+    const e = fb.shots[s.id] || {}, row = document.getElementById('s_' + s.id), seg = document.getElementById('b_' + s.id);
+    row.classList.toggle('cur', i === cur); seg.className = 'seg ' + (e.verdict || '');
+    row.querySelectorAll('.v button').forEach(b => b.classList.toggle('on', b.dataset.v === e.verdict));
+  });
+  const done = shots.filter(s => (fb.shots[s.id] || {}).verdict).length; $('#count').textContent = `${done} / ${shots.length} marked`;
+  if (cur >= 0) { $('#cid').textContent = shots[cur].id; $('#cname').textContent = shots[cur].name; }
+}
+function setVerdict(i, val) { const e = entry(shots[i].id); e.verdict = e.verdict === val ? '' : val; paint(); save(); }
+function go(i, play) { i = Math.max(0, Math.min(shots.length - 1, i)); v.currentTime = shots[i].t0 + 0.001; if (play) v.play(); }
+async function load(name) {
+  ver = name; const ch = name.split('_')[0];
+  const [sj, fj] = await Promise.all([   // the shot list and the notes, asked for together
+    fetch(`/${name}_shots.json`).then(r => r.ok ? r : fetch(`/${ch}_shots.json`)).then(r => r.json()),
+    fetch('/feedback?f=' + name).then(r => r.json())]);
+  if (ver !== name) return;              // another version was picked while this one was loading
+  shots = sj; fb = Object.assign({ shots: {}, overall: '' }, fj);
+  v.src = `/${name}.mp4`; $('#g').value = fb.overall || ''; $('#gmk').hidden = !$('#g').value.trim();
+  const dur = shots[shots.length - 1].t1;
+  $('#bar').querySelectorAll('.seg').forEach(n => n.remove());
+  $('#list').innerHTML = '';
+  shots.forEach((s, i) => {
+    const seg = document.createElement('div'); seg.id = 'b_' + s.id; seg.className = 'seg'; seg.style.left = (s.t0 / dur * 100) + '%'; seg.style.width = ((s.t1 - s.t0) / dur * 100) + '%'; seg.innerHTML = `<span>${esc(s.id)}</span>`; $('#bar').prepend(seg);
+    const row = document.createElement('div'); row.className = 'shot'; row.id = 's_' + s.id;
+    row.innerHTML = `<div class="h"><b>${esc(s.id)}</b><span class="n">${esc(s.name)}</span><span class="t">${fmt(s.t0)} – ${fmt(s.t1)}</span></div>
+      <div class="v"><button data-v="keep" class="keep" data-tip="This shot is good — leave it alone ( 1 )">Keep</button><button data-v="fix" class="fix" data-tip="This shot needs the change in your note ( 2 )">Fix</button><button data-v="cut" class="cut" data-tip="Remove or replace this shot ( 3 )">Cut</button></div>
+      <textarea placeholder="What should change?" aria-label="Note for ${esc(s.id)}"></textarea><div class="prevnote" hidden></div><button class="mk" data-tip="Copy this note into your standing rules, to edit there">Make this a rule</button><div class="pins"></div>`;
+    // In the Library tab the render is hidden, so a click only selects the shot (the pin target) and never plays it.
+    row.addEventListener('click', e => { if (!['BUTTON', 'TEXTAREA', 'INPUT'].includes(e.target.tagName) && !e.target.closest('.pins') && !e.target.closest('.prevnote')) go(i, tab === 'review'); });
+    row.querySelectorAll('.v button').forEach(b => b.addEventListener('click', () => setVerdict(i, b.dataset.v)));
+    const ta = row.querySelector('textarea'); ta.value = (fb.shots[s.id] || {}).note || '';
+    ta.addEventListener('input', () => { entry(s.id).note = ta.value; row.classList.toggle('hasnote', !!ta.value.trim()); save(); });
+    row.classList.toggle('hasnote', !!ta.value.trim()); row.querySelector('.mk').addEventListener('click', () => makeRule(ta.value));
+    $('#list').append(row); renderPins(s.id);
+  });
+  $('#pshot').innerHTML = shots.map(s => `<option value="${esc(s.id)}">${esc(s.id)} — ${esc(s.name)}</option>`).join('');
+  cur = 0; paint(); syncPinTarget(); const anyNotes = hasNotes() || Object.values(fb.shots || {}).some(e => e && e.verdict);   // what is in the file, not whether it carries a save time
+  setSaved(anyNotes ? 'Notes saved' + (fb.savedAt ? ' ' + clock(new Date(fb.savedAt)) : '') : 'No notes yet'); loadPrevNotes(name);
+  runErr = ''; pollRun();
+  fetch('/changes?f=' + encodeURIComponent(name)).then(r => r.ok ? r.text() : '').catch(() => '').then(t => { if (ver !== name) return; $('#verChanges').hidden = !t.trim(); $('#verChanges pre').textContent = t.trim(); });
+}
+$('#bar').addEventListener('click', e => { const r = $('#bar').getBoundingClientRect(); v.currentTime = (e.clientX - r.left) / r.width * shots[shots.length - 1].t1; });
+$('#g').addEventListener('input', () => { fb.overall = $('#g').value; $('#gmk').hidden = !$('#g').value.trim(); save(); });
+$('#gmk').addEventListener('click', () => makeRule($('#g').value));
+$('#loop').addEventListener('click', () => { loop = !loop; $('#loop').classList.toggle('on', loop); });
+$('#slow').addEventListener('click', () => { v.playbackRate = v.playbackRate === 1 ? .5 : 1; $('#slow').classList.toggle('on', v.playbackRate !== 1); });
+function stamp() { if (cur < 0) return; const ta = document.querySelector('#s_' + CSS.escape(shots[cur].id) + ' textarea'); v.pause(); ta.value += (ta.value && !ta.value.endsWith('\n') ? '\n' : '') + `[${fmt(v.currentTime)}] `; entry(shots[cur].id).note = ta.value; ta.focus(); save(); }
+$('#stamp').addEventListener('click', stamp);
+// Runs every frame, so it must cost nothing while nothing moves: it only looks at two numbers, and touches the page
+// only when the playhead (or the shot list, see tickKey) actually changed. Writing the same text each frame used to
+// force a layout 40+ times a second on an idle page.
+let tickT = -1, tickKey = null, tickTc = '';
+function tick() {
+  requestAnimationFrame(tick);
+  if (tab === 'library' && pc) previewTick();
+  const t = v.currentTime; if (t === tickT && tickKey === shots) return;
+  tickT = t; tickKey = shots;
+  let i = shots.findIndex(s => t >= s.t0 && t < s.t1); if (i < 0) i = shots.length ? shots.length - 1 : -1;
+  if (loop && cur >= 0 && (t >= shots[cur].t1 - 0.02 || t < shots[cur].t0 - 0.05)) { v.currentTime = shots[cur].t0 + 0.001; i = cur; }
+  if (i !== cur) { cur = i; paint(); syncPinTarget(); document.getElementById('s_' + shots[cur].id)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  if (shots.length) { $('#head').style.left = (t / shots[shots.length - 1].t1 * 100) + '%'; const tc = fmt(t); if (tc !== tickTc) { tickTc = tc; $('#tc').firstChild ? ($('#tc').firstChild.nodeValue = tc) : ($('#tc').textContent = tc); } }
+}
+document.addEventListener('keydown', e => {
+  if (typing()) { if (e.key === 'Escape') document.activeElement.blur(); return; }
+  const k = e.key;
+  if (tab === 'new') { if (e.key === 'Escape' && !helpOpen && $('#perf').hidden) closeNew(); return; }
+  if (tab === 'rules') return;
+  if (tab === 'live') { forwardKey(e); return; }
+  if (tab === 'library') { if (!(e.metaKey || e.ctrlKey || e.altKey)) libraryKey(e); return; }
+  if (k === ' ') { e.preventDefault(); v.paused ? v.play() : v.pause(); }
+  else if (k === 'ArrowRight') { v.pause(); v.currentTime += 1 / FPS; } else if (k === 'ArrowLeft') { v.pause(); v.currentTime -= 1 / FPS; }
+  else if (k === 'ArrowDown') { e.preventDefault(); go(cur + 1, !v.paused); } else if (k === 'ArrowUp') { e.preventDefault(); go(cur - 1, !v.paused); }
+  else if (k === '1') setVerdict(cur, 'keep'); else if (k === '2') setVerdict(cur, 'fix'); else if (k === '3') setVerdict(cur, 'cut');
+  else if (k === 'l' || k === 'L') $('#loop').click(); else if (k === 'n' || k === 'N') { e.preventDefault(); stamp(); }
+});
+
+/* ------------------------------------------------------------------ the notes the previous version got */
+// After a Run or a Publish the reviewer wants to check each note was dealt with: a quiet line on the new version, and
+// "view" lays the old notes, read-only, under the matching shots.
+let prevNotes = null, prevOpen = false;
+async function loadPrevNotes(name) {
+  prevNotes = null; prevOpen = false; $('#prevLine').hidden = true; paintPrevNotes();
+  const m = /^(.+)_v(\d+)$/.exec(name); if (!m || +m[2] < 2) return;
+  const before = verList().filter(x => { const y = /^(.+)_v(\d+)$/.exec(x); return y && y[1] === m[1] && +y[2] < +m[2]; }).sort((a, b) => +a.split('_v').pop() - +b.split('_v').pop()).pop();
+  if (!before) return;
+  let d = {}; try { d = await (await fetch('/feedback?f=' + encodeURIComponent(before))).json(); } catch (e) { return; }
+  if (ver !== name) return;
+  const es = Object.values(d.shots || {}).filter(e => e && (e.verdict || (e.note || '').trim() || (e.pins || []).length)), n = v => es.filter(e => e.verdict === v).length;
+  const bits = [['fix', n('fix')], ['cut', n('cut')], ['keep', n('keep')]].filter(x => x[1]).map(x => `${x[1]} ${x[0]}`);
+  const notes = es.filter(e => (e.note || '').trim()).length, pins = es.reduce((a, e) => a + (e.pins || []).length, 0), overall = (d.overall || '').trim();
+  if (notes) bits.push(`${notes} written note${notes > 1 ? 's' : ''}`); if (pins) bits.push(`${pins} pinned clip${pins > 1 ? 's' : ''}`); if (overall) bits.push('an overall note');
+  if (!bits.length) return;
+  prevNotes = { version: before, data: d };
+  $('#prevLine').hidden = false; $('#prevLine').innerHTML = `Notes on ${esc(before)}: ${esc(bits.join(', '))} — <button class="lnk" id="prevView" aria-expanded="false">view</button>`;
+  $('#prevView').addEventListener('click', () => { prevOpen = !prevOpen; paintPrevNotes(); });
+}
+function paintPrevNotes() {
+  const d = prevNotes && prevOpen ? prevNotes.data : null, v = prevNotes ? prevNotes.version : '', btn = $('#prevView');
+  if (btn) { btn.textContent = prevOpen ? 'hide' : 'view'; btn.setAttribute('aria-expanded', prevOpen); }
+  const fill = (box, e, extra) => { const has = e && (e.verdict || (e.note || '').trim() || (e.pins || []).length); box.hidden = !has; if (!has) return;
+    box.innerHTML = `<b>${esc(v)}</b>${e.verdict ? `<span class="vd ${esc(e.verdict)}">${esc(e.verdict)}</span>` : ''}${esc((e.note || '').trim())}`
+      + (e.pins || []).map(p => `\n· pinned ${esc(String(p.src || '').split('/').pop())} at ${fmt(+p.ss || 0)}${p.comment ? ' — ' + esc(p.comment) : ''}`).join('') + (extra || ''); };
+  shots.forEach(s => { const box = document.querySelector('#s_' + CSS.escape(s.id) + ' .prevnote'); if (box) fill(box, d ? (d.shots || {})[s.id] : null); });
+  const gone = d ? Object.keys(d.shots || {}).filter(id => !shots.some(s => s.id === id) && ((d.shots[id].note || '').trim() || d.shots[id].verdict)) : [];
+  const ov = $('#prevOverall'), text = d ? (d.overall || '').trim() : '';
+  ov.hidden = !(text || gone.length);
+  if (!ov.hidden) ov.innerHTML = `<b>${esc(v)}</b>${esc(text)}` + (gone.length ? `${text ? '\n' : ''}On shots this version no longer has: ` + gone.map(id => `${esc(id)}${d.shots[id].verdict ? ' (' + esc(d.shots[id].verdict) + ')' : ''}${(d.shots[id].note || '').trim() ? ' — ' + esc(d.shots[id].note.trim()) : ''}`).join('; ') : '');
+}
+
+/* ------------------------------------------------------------------ tabs */
+// One shell, four tabs. Nothing reloads on a switch: panes are hidden, Live lives in a kept-alive iframe.
+const TABS = ['review', 'library', 'rules', 'live', 'new'], frame = $('#liveFrame'), newFrame = $('#newFrame'), scrolls = {};
+const framed = t => t === 'live' || t === 'new';   // tabs that are a kept-alive iframe rather than a pane
+let tab = 'review', live = { ready: false, tid: null, dirty: 0 }, timelines = [], syncedTid = null, liveChosen = null, reviewSaved = null;
+const liveSaved = () => !live.ready ? ['', ''] : live.dirty ? ['Unsaved changes', 'warn'] : ['Saved', ''];
+const liveApi = () => { try { return frame.contentWindow && frame.contentWindow.cutvelvetLive; } catch (e) { return null; } };
+$('#saved').addEventListener('click', saveByHand);
+const NEW = '__new', newOpt = `<option disabled>────────</option><option value="${NEW}">+ New cut…</option>`;
+const verList = () => [...$('#ver').options].map(o => o.value).filter(x => x && x !== NEW);
+function fillVer(vs, keep) { $('#ver').innerHTML = vs.map(x => `<option>${esc(x)}</option>`).join('') + newOpt; if (keep && vs.includes(keep)) $('#ver').value = keep; else if (vs.length) $('#ver').value = vs[vs.length - 1]; else $('#ver').selectedIndex = -1; }
+function fillCuts() { $('#ltl').innerHTML = timelines.map(t => `<option value="${esc(t.id)}">${esc(t.id)}${t.title ? ' — ' + esc(t.title) : ''}</option>`).join('') + newOpt; if (live.tid) $('#ltl').value = live.tid; else if (!timelines.length) $('#ltl').selectedIndex = -1; }
+const chapter = v => (/^(.+)_v\d+$/.exec(v || '') || [])[1] || null;
+let beforeNew = 'review';
+function closeNew() { if (tab === 'new') setTab(TABS.includes(beforeNew) && beforeNew !== 'new' ? beforeNew : 'review'); }   // New cut's × / Esc: back to where you were
+function setTab(t, fromHash) {
+  if (!TABS.includes(t)) t = 'review';
+  if (t === 'new' && tab !== 'new') beforeNew = tab;
+  const was = tab; if (t === was && !fromHash && setTab.ran) return; setTab.ran = true;
+  tab = t;
+  $('#reviewPane').hidden = t !== 'review'; $('#libPane').hidden = t !== 'library'; $('#rulesPane').hidden = t !== 'rules';
+  $('#app').hidden = framed(t); frame.hidden = t !== 'live'; newFrame.hidden = t !== 'new';
+  if (t === 'new') { if (!newFrame.dataset.on) { newFrame.dataset.on = 1;
+      fetch('/new.html', { method: 'HEAD' }).then(r => { if (r.ok) newFrame.src = '/new.html?embed=1'; else throw 0; })
+        .catch(() => { delete newFrame.dataset.on; newFrame.srcdoc = '<body style="margin:0;background:#0c0c0d;color:#8d8a84;font:14px -apple-system,sans-serif;padding:24px">New cut is not available in this install yet.</body>'; }); }
+    try { newFrame.contentWindow.focus(); } catch (e) {} }
+  else if (was === 'new') { try { newFrame.blur(); window.focus(); } catch (e) {} }
+  for (const x of TABS) { const b = $('#tab' + x[0].toUpperCase() + x.slice(1)); b.classList.toggle('on', x === t); b.setAttribute('aria-selected', x === t); }
+  $('#pickLbl').textContent = t === 'live' ? 'Cut' : t === 'new' ? 'New cut' : 'Version'; $('#pickLbl').htmlFor = t === 'live' ? 'ltl' : 'ver';
+  $('#pick').classList.toggle('dim', t === 'library' || t === 'rules' || t === 'new');   // still there, so nothing moves, but not what these tabs are about
+  paintSaved();
+  if (t === 'library' && gridDirty) renderGrid();   // built the first time it is looked at, not while hidden
+  if (t === 'review' && startOn) refreshStart();    // the checklist catches up the moment you come back to it
+  if (t !== 'review' && !v.paused) v.pause(); if (t !== 'library' && !$('#pv').paused) $('#pv').pause();
+  if (t !== 'live') { const a = liveApi(); if (a) a.pause(); if (was === 'live') { try { frame.blur(); window.focus(); } catch (e) {} leaveLive(); } }
+  else enterLive();
+  $('#ltl').hidden = t !== 'live'; $('#ver').hidden = t === 'live';   // one slot, right of the title, on every tab
+  $('#helpBtn').dataset.tab = t; paintHelp(); $('#run').hidden = t !== 'review'; $('#pub').hidden = t !== 'review' && t !== 'live';
+  if (!fromHash) { const h = t === 'review' ? '' : '#' + t; if (location.hash !== h) { try { h ? (location.hash = h) : history.pushState(null, '', location.pathname + location.search); } catch (e) {} } }
+  paintRun();
+}
+for (const x of TABS) $('#tab' + x[0].toUpperCase() + x.slice(1)).addEventListener('click', () => setTab(x));
+window.addEventListener('hashchange', () => { const t = location.hash.slice(1) || 'review'; if (t !== tab) setTab(t, true); });   // our own switch already ran
+window.addEventListener('popstate', () => { const t = location.hash.slice(1) || 'review'; if (t !== tab) setTab(t, true); });
+
+/* Live tab: /live.html?embed=1 in an iframe created on first use and then kept, so its playhead, selection and edits survive */
+function enterLive() {
+  const want = timelines.some(t => t.id === chapter(ver)) ? chapter(ver) : null;
+  if (!frame.src) { frame.src = '/live.html?embed=1' + (want ? '&tl=' + encodeURIComponent(want) : ''); syncedTid = want; }
+  else { const a = liveApi();   // follow Review to another timeline, but only when Review moved and Live has nothing unsaved
+    if (a && want && want !== syncedTid && want !== live.tid && !live.dirty) a.open(want);
+    syncedTid = want || syncedTid; }
+  try { frame.contentWindow.focus(); } catch (e) {}
+}
+function leaveLive() {   // the other way round: a timeline picked in Live is the one Review shows next
+  if (!liveChosen || liveChosen === chapter(ver)) { liveChosen = null; return; }
+  const mine = verList().filter(x => chapter(x) === liveChosen); liveChosen = null;
+  if (mine.length) { $('#ver').value = mine[mine.length - 1]; load(mine[mine.length - 1]); }
+}
+window.addEventListener('message', e => {
+  if (e.origin !== location.origin || e.source !== frame.contentWindow || !e.data || !e.data.cutvelvetLive) return;
+  live = e.data.cutvelvetLive; $('#tabLive').classList.toggle('dirty', live.dirty > 0);
+  $('#tabLive').dataset.tip = live.dirty ? `Live has unsaved changes (${live.dirty} panel${live.dirty > 1 ? 's' : ''})` : '';
+  if (live.tid && $('#ltl').value !== live.tid) $('#ltl').value = live.tid;
+  if (tab === 'live') { paintSaved(); paintRun(); }
+});
+$('#ltl').addEventListener('change', async () => { const a = liveApi(), want = $('#ltl').value;
+  if (want === NEW) { $('#ltl').value = live.tid || ''; setTab('new'); return; }
+  if (!a) return; const ok = await a.open(want); if (ok) liveChosen = want; else $('#ltl').value = live.tid; $('#ltl').blur(); });
+// Keys typed while the shell has focus (after clicking a tab, say) still drive the visible Live preview.
+function forwardKey(e) {
+  if (!frame.contentWindow || e.key === 'Tab' || e.key === 'Enter') return;
+  try { const K = frame.contentWindow.KeyboardEvent; frame.contentWindow.dispatchEvent(new K('keydown', { key: e.key, code: e.code, shiftKey: e.shiftKey, metaKey: e.metaKey, ctrlKey: e.ctrlKey, altKey: e.altKey, bubbles: true, cancelable: true }));
+    if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's')) e.preventDefault(); } catch (x) {}
+}
+window.addEventListener('message', e => {   // the New cut page: "open this version in Review"
+  const d = e.data && e.data.cutvelvetNew; if (e.origin !== location.origin || e.source !== newFrame.contentWindow || !d) return;
+  if (d.close) { closeNew(); return; }
+  if (d.open) refreshVersions().then(() => { if (verList().includes(d.open)) { $('#ver').value = d.open; load(d.open); setTab('review'); } }); else if (d.state) pollRun();
+});
+window.addEventListener('beforeunload', e => { if (live.dirty) { e.preventDefault(); e.returnValue = ''; } });
+fetch('/api/timeline').then(r => r.json()).then(d => { timelines = d.timelines || []; fillCuts(); paintRun(); paintStart(); }).catch(() => { fillCuts(); });
+
+/* ------------------------------------------------------------------ library */
+const pv = $('#pv');
+let lib = { clips: [], folders: [], status: {} }, used = {}, bySrc = {}, pc = null, lmode = 'all', pollTimer, hoverT = null;
+const usedOf = c => used[c.src] || [];
+const rlabel = r => `${r.timeline ?? '?'} · ${r.shot ?? '?'}`;
+// Two ranges on the same footage clash unless they are panels of the same shot (one moment shown in several strips).
+function markClashes() {
+  for (const rs of Object.values(used)) rs.forEach(r => { r.clash = rs.some(o => o !== r && (o.timeline !== r.timeline || o.shot !== r.shot) && o.a < r.b - 0.01 && r.a < o.b - 0.01); });
+}
+const usedAt = (c, t) => usedOf(c).filter(r => t >= r.a && t <= r.b);
+const labels = rs => [...new Set(rs.map(rlabel))];   // two panels of one shot using the clip are one use, named once
+function usedBar(c) {
+  const d = c.duration || 0; if (!d) return '';
+  return usedOf(c).map(r => { const a = Math.max(0, Math.min(1, r.a / d)), b = Math.max(a, Math.min(1, r.b / d));
+    return `<i class="u${r.clash ? ' clash' : ''}" style="left:${(a * 100).toFixed(2)}%;width:${((b - a) * 100).toFixed(2)}%" data-tip="${esc(rlabel(r))} · ${fmt(r.a)}–${fmt(r.b)}${r.clash ? ' · also used elsewhere' : ''}"></i>`; }).join('');
+}
+const clipText = c => [c.id, c.name, c.src, ...Object.values(c.meta || {})].join(' ').toLowerCase();
+function spriteStyle(c, i) { const s = c.sprite; return s ? `background-image:url(${s.url});background-size:${s.frames * 100}% 100%;background-position:${s.frames > 1 ? i / (s.frames - 1) * 100 : 0}% 0;` : ''; }
+function frameAt(c, t) { const s = c.sprite; if (!s || !c.duration) return 0; return Math.max(0, Math.min(s.frames - 1, Math.floor(t / c.duration * s.frames))); }
+
+let gridDirty = true, gridSig = '', gridGen = 0;
+async function loadLibrary() {
+  clearTimeout(pollTimer);
+  try {
+    const lim = { signal: AbortSignal.timeout(20000) };   // a stalled request must not leave the library stuck on "loading"
+    const [l, u] = await Promise.all([fetch('/api/library', lim).then(r => r.json()), fetch('/api/used', lim).then(r => r.json())]);
+    lib = l; used = u || {}; markClashes(); bySrc = {}; lib.clips.forEach(c => { bySrc[c.src] = c; });
+    if (lib.project?.name) { $('#title').textContent = lib.project.name; document.title = lib.project.name + ' — Review'; }
+    if (lib.status?.error) $('#lerr').textContent = 'Scan error: ' + lib.status.error; else if ($('#lerr').textContent.startsWith('Scan error')) $('#lerr').textContent = '';
+  } catch (e) { $('#lerr').textContent = 'Could not load the library: ' + e.message; }
+  renderFolders(); gridDirty = true; shots.forEach(s => renderPins(s.id)); paintStart();
+  // The grid is built when the Library is on screen, or in an idle moment, so the first switch to it has nothing left to do
+  // and the first paint of the page is not held up building 100 hidden cards.
+  if (tab === 'library') renderGrid(); else (window.requestIdleCallback || (f => setTimeout(f, 600)))(() => { if (gridDirty) renderGrid(); }, { timeout: 4000 });
+  if (pc && bySrc[pc.src]) { pc = bySrc[pc.src]; renderPreviewBar(); }
+  if (lib.status?.scanning) pollTimer = setTimeout(loadLibrary, 1500);
+}
+function renderFolders() {
+  const el = $('#folders');
+  el.innerHTML = (lib.folders || []).map(f => `<span class="fold${f.exists && !f.blocked ? '' : ' missing'}" data-tip="${esc(f.abs)}${f.blocked ? '\nThis folder is outside the project and was listed by the project file, not added by you on this computer, so it is not read. Click “allow” if you want it in the library.' : f.exists ? '' : ' (missing)'}">${esc(f.path)} <small>${f.blocked ? 'not read' : f.exists ? f.count : 'missing'}</small>${f.blocked ? `<button class="lnk" data-allow="${esc(f.abs)}">allow</button>` : ''}<button data-rm="${esc(f.path)}" aria-label="Remove folder ${esc(f.path)}">×</button></span>`).join('');
+  el.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => folderOp({ remove: b.dataset.rm })));
+  el.querySelectorAll('[data-allow]').forEach(b => b.addEventListener('click', () => { if (confirm('Let cutvelvet read this folder?\n\n' + b.dataset.allow + '\n\nIt is outside the project and was listed by the project file. Every video in it will be indexed and can be played in the page.')) folderOp({ add: b.dataset.allow }); }));
+}
+async function folderOp(body) {
+  $('#lerr').textContent = '';
+  try { const r = await fetch('/api/library/folders', { method: 'POST', body: JSON.stringify(body) }); const d = await r.json(); if (!d.ok) { $('#lerr').textContent = d.error || 'Could not change folders'; return; } }
+  catch (e) { $('#lerr').textContent = 'Could not change folders: ' + e.message; return; }
+  loadLibrary();
+}
+$('#fadd').addEventListener('click', () => { const p = $('#fpath').value.trim();
+  if (!p) { $('#lerr').textContent = 'Type or paste a folder path first — or use “Add folder…” to choose one.'; $('#fpath').focus(); return; }
+  folderOp({ add: p }).then(() => { if (!$('#lerr').textContent) $('#fpath').value = ''; }); });
+$('#fpath').addEventListener('keydown', e => { if (e.key === 'Enter') $('#fadd').click(); });
+$('#fpick').addEventListener('click', async () => {
+  const b = $('#fpick'); b.disabled = true; $('#lerr').textContent = ''; const hint = $('#fhint').textContent;
+  $('#fhint').textContent = 'Choose a folder in the dialog that just opened (if you cannot see it, it may be behind this window)…';
+  try { const d = await (await fetch('/api/library/pick', { method: 'POST' })).json();
+    if (d.ok) loadLibrary(); else if (!d.cancelled) $('#lerr').textContent = d.error || 'Could not open the folder chooser — paste a path instead.'; }
+  catch (e) { $('#lerr').textContent = 'Could not open the folder chooser: ' + e.message; }
+  b.disabled = false; $('#fhint').textContent = hint;
+});
+$('#rescan').addEventListener('click', async () => { await fetch('/api/library/rescan', { method: 'POST' }); loadLibrary(); });
+function cardHTML(c) {
+  const ar = c.width && c.height ? c.width / c.height : 16 / 9, fit = ar >= 16 / 9 ? `width:100%;aspect-ratio:${ar.toFixed(4)};` : `height:100%;aspect-ratio:${ar.toFixed(4)};`;
+  const clash = usedOf(c).some(r => r.clash), res = c.width ? esc(`${c.width}×${c.height}${c.fps ? ' · ' + (+(+c.fps).toFixed(2)) + 'fps' : ''}`) : '';
+  const th = c.poster ? `<img loading="lazy" decoding="async" alt="" src="${esc(c.poster)}"><div class="sp" style="${fit}"></div><i class="hl"></i>` : `<div class="nop">${c.error ? esc(c.error === 'unreadable' ? 'unreadable' : 'no thumbnail') : 'indexing…'}</div>`;
+  return `<div class="card${pc && pc.src === c.src ? ' sel' : ''}" data-src="${esc(c.src)}"><div class="th">${th}${clash ? '<span class="tag">reused</span>' : ''}<span class="d">${c.duration ? fmt(c.duration) : ''}</span><span class="ht"></span></div>
+      <div class="ub">${usedBar(c)}</div><div class="m"><b>${esc(c.id)}</b><span>${res}</span></div><div class="q">${esc(c.meta?.q || c.meta?.title || c.meta?.description || '')}</div></div>`;
+}
+function renderGrid() {
+  const q = $('#fq').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const list = lib.clips.filter(c => { const u = usedOf(c).length > 0;
+    if (lmode === 'used' && !u || lmode === 'unused' && u) return false;
+    if (q.length) { const t = clipText(c); return q.every(w => t.includes(w)); } return true; });
+  const st = lib.status || {}, nUsed = lib.clips.filter(c => usedOf(c).length).length;
+  const count = `${list.length} of ${lib.clips.length} clips · ${nUsed} used` + (st.scanning ? ` · indexing ${st.done}/${st.total}…` : '');
+  if ($('#lcount').textContent !== count) $('#lcount').textContent = count;
+  $('#rescan').disabled = !!st.scanning; gridDirty = false;
+  // Re-render only when what the cards show has changed (polls during indexing would otherwise rebuild every card).
+  const sig = JSON.stringify([list.map(c => [c.src, c.key, c.poster ? 1 : 0, c.error || 0, c.duration]), used, st.scanning ? 1 : 0, lib.clips.length]);
+  if (sig === gridSig) return; gridSig = sig;
+  const grid = $('#grid'), gen = ++gridGen;
+  if (!list.length) { grid.innerHTML = `<span class="hint">${lib.clips.length ? 'No clips match.' : (st.scanning ? 'Indexing…' : 'No clips yet. Choose Add folder… above to link a folder of footage, or drop video files anywhere on this page to copy them in.')}</span>`; return; }
+  // The first screenful is built and inserted at once; the rest is built and appended in small pieces between frames, so
+  // a long library never makes one long pause (the cards below the fold are not visible yet anyway).
+  const FIRST = 24, STEP = 24; let at = Math.min(FIRST, list.length);
+  grid.innerHTML = list.slice(0, at).map(cardHTML).join('');
+  const more = () => { if (gen !== gridGen || at >= list.length) return; grid.insertAdjacentHTML('beforeend', list.slice(at, at + STEP).map(cardHTML).join('')); at += STEP; if (at < list.length) setTimeout(more, 0); };
+  if (at < list.length) setTimeout(more, 0);
+}
+$('#fq').addEventListener('input', renderGrid);
+$('#fmode').addEventListener('click', e => { const m = e.target.dataset?.m; if (!m) return; lmode = m; $('#fmode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); renderGrid(); });
+// hover-scrub: the sprite is only fetched the first time a card is hovered
+$('#grid').addEventListener('mousemove', e => {
+  const th = e.target.closest('.th'); if (!th) return; const c = bySrc[th.parentNode.dataset.src]; if (!c || !c.sprite) return;
+  const r = th.getBoundingClientRect(), f = Math.max(0, Math.min(.9999, (e.clientX - r.left) / r.width)), i = Math.floor(f * c.sprite.frames), sp = th.querySelector('.sp');
+  if (!sp.dataset.on) { sp.dataset.on = 1; sp.style.backgroundImage = `url(${c.sprite.url})`; sp.style.backgroundSize = `${c.sprite.frames * 100}% 100%`; }
+  sp.style.backgroundPosition = `${c.sprite.frames > 1 ? i / (c.sprite.frames - 1) * 100 : 0}% 0`;
+  th.classList.add('scrub'); th.querySelector('.hl').style.left = (f * 100) + '%';
+  hoverT = { src: c.src, t: f * c.duration }; const u = usedAt(c, hoverT.t);
+  th.querySelector('.ht').textContent = fmt(hoverT.t) + (u.length ? ' · used ' + labels(u).join(', ') : '');
+});
+$('#grid').addEventListener('mouseout', e => { const th = e.target.closest('.th'); if (th && !th.contains(e.relatedTarget)) { th.classList.remove('scrub'); hoverT = null; } });
+$('#grid').addEventListener('click', e => { const card = e.target.closest('.card'); if (!card) return; const src = card.dataset.src; openClip(src, hoverT && hoverT.src === src && e.target.closest('.th') ? hoverT.t : 0); });
+
+/* preview player */
+function openClip(src, t) {
+  const c = bySrc[src]; if (!c) { $('#lerr').textContent = `${src} is not in the library (add its folder, or rescan).`; setTab('library'); return; }
+  $('#lerr').textContent = ''; setTab('library'); pc = c; $('#prev').hidden = false;
+  const url = '/media?src=' + encodeURIComponent(c.src), want = Math.max(0, Math.min(t || 0, Math.max(0, (c.duration || 0) - 0.05)));
+  if (pv.dataset.src !== c.src) { pv.dataset.src = c.src; pv.poster = c.poster || ''; pv.src = url; pv.addEventListener('loadedmetadata', () => { pv.currentTime = want; }, { once: true }); }
+  else pv.currentTime = want;
+  $('#pid').textContent = c.id;
+  const m = c.meta || {}, bits = [c.width ? `${c.width}×${c.height}` : '', c.fps ? (+c.fps.toFixed(2)) + ' fps' : '', m.q ? '“' + m.q + '”' : ''].filter(Boolean).map(esc);
+  if (/^https?:\/\//.test(m.url || '')) bits.push(`<a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">source</a>`);
+  $('#pmeta').innerHTML = bits.join(' · ');
+  renderPreviewBar(); document.querySelectorAll('.card').forEach(n => n.classList.toggle('sel', n.dataset.src === c.src));
+  $('#libPane').scrollTo({ top: 0, behavior: 'smooth' });
+}
+function renderPreviewBar() { const bar = $('#pbar'); bar.querySelectorAll('i.u').forEach(n => n.remove()); bar.insertAdjacentHTML('afterbegin', usedBar(pc)); }
+function closePreview() { pv.pause(); pc = null; $('#prev').hidden = true; document.querySelectorAll('.card.sel').forEach(n => n.classList.remove('sel')); }
+const pdur = () => (pc && pc.duration) || pv.duration || 0;
+let prevTickT = -1, prevTickSrc = null;
+function previewTick() {
+  const d = pdur(), t = pv.currentTime || 0; if (!d) return;
+  if (t === prevTickT && prevTickSrc === pc) return; prevTickT = t; prevTickSrc = pc;   // nothing moved: leave the page alone
+  $('#phead').style.left = (t / d * 100) + '%'; const tc = `${fmt(t)} / ${fmt(d)}`; if ($('#ptc').textContent !== tc) $('#ptc').textContent = tc;
+  const u = usedAt(pc, t), w = u.length ? 'this moment is already used in ' + labels(u).join(', ') : '';
+  if ($('#pwarn').textContent !== w) $('#pwarn').textContent = w;
+}
+function pseek(e) { const r = $('#pbar').getBoundingClientRect(), f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); return f * pdur(); }
+$('#pbar').addEventListener('pointerdown', e => { if (!pc) return; $('#pbar').setPointerCapture(e.pointerId); pv.pause(); pv.currentTime = pseek(e); });
+$('#pbar').addEventListener('pointermove', e => { if (!pc) return; const t = pseek(e), u = usedAt(pc, t);
+  $('#pbar').dataset.tip = fmt(t) + (u.length ? '\n' + u.map(r => `used: ${rlabel(r)} · ${fmt(r.a)}–${fmt(r.b)}`).join('\n') : '');
+  if (e.buttons & 1 && $('#pbar').hasPointerCapture(e.pointerId)) pv.currentTime = t; });
+$('#pclose').addEventListener('click', closePreview);
+function syncPinTarget() { if (cur >= 0 && shots[cur]) $('#pshot').value = shots[cur].id; $('#ppin').disabled = !shots.length; }
+function pin() {
+  const id = $('#pshot').value; if (!pc || !id || !shots.some(s => s.id === id)) return;
+  pv.pause(); const e = entry(id); if (!Array.isArray(e.pins)) e.pins = [];
+  e.pins.push({ src: pc.src, ss: Math.round(pv.currentTime * 1000) / 1000, comment: $('#pcomment').value.trim() });
+  $('#pcomment').value = ''; renderPins(id); save();
+  document.getElementById('s_' + id)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+$('#ppin').addEventListener('click', pin);
+$('#pcomment').addEventListener('keydown', e => { if (e.key === 'Enter') { pin(); e.target.blur(); } });
+function libraryKey(e) {
+  const k = e.key, step = 1 / ((pc && pc.fps) || FPS);
+  if (k === 'ArrowDown') { e.preventDefault(); go(cur + 1, false); } else if (k === 'ArrowUp') { e.preventDefault(); go(cur - 1, false); }
+  else if (!pc) return;
+  else if (k === ' ') { e.preventDefault(); pv.paused ? pv.play() : pv.pause(); }
+  else if (k === 'ArrowRight') { e.preventDefault(); pv.pause(); pv.currentTime += step; } else if (k === 'ArrowLeft') { e.preventDefault(); pv.pause(); pv.currentTime -= step; }
+  else if (k === 'p' || k === 'P') { e.preventDefault(); pin(); } else if (k === 'Escape') closePreview();
+}
+
+/* pins: fb.shots[id].pins = [{src, ss, comment}] — additive; the key is removed again when the last pin goes */
+function renderPins(id) {
+  const box = document.querySelector('#s_' + CSS.escape(id) + ' .pins'); if (!box) return;
+  const pins = (fb.shots[id] || {}).pins; box.innerHTML = '';
+  if (!Array.isArray(pins)) return;
+  pins.forEach((p, n) => {
+    if (!p || typeof p.src !== 'string') return;
+    const c = bySrc[p.src], ss = +p.ss || 0, name = c ? c.id : p.src.split('/').pop().replace(/\.[^.]+$/, '');
+    const chip = document.createElement('span'); chip.className = 'pin';
+    chip.innerHTML = `<span class="pt" style="${esc(c && c.sprite ? spriteStyle(c, frameAt(c, ss)) : (c && c.poster ? `background-image:url(${c.poster})` : ''))}" data-tip="Open ${esc(p.src)} at ${fmt(ss)}"></span>
+      <span class="pl" data-tip="Open ${esc(p.src)} at ${fmt(ss)}">${esc(name)} <small>@ ${fmt(ss)}</small></span>
+      <input type="text" placeholder="comment" aria-label="Pin comment" value="${esc(p.comment || '')}"><button class="px" aria-label="Remove pin" data-tip="Remove pin">×</button>`;
+    chip.querySelectorAll('.pt, .pl').forEach(el => el.addEventListener('click', () => openClip(p.src, ss)));
+    chip.querySelector('input').addEventListener('input', e => { p.comment = e.target.value; save(); });
+    chip.querySelector('.px').addEventListener('click', () => { const e = fb.shots[id]; e.pins.splice(e.pins.indexOf(p), 1); if (!e.pins.length) delete e.pins; renderPins(id); save(); });
+    box.append(chip);
+  });
+}
+
+/* ------------------------------------------------------------------ rules */
+let rules = [], ruleGroups = [], ruleTimer, rulesLoaded = false, rulesMeta = { saved: true, defaults: {} };
+const ruleText = r => r.template ? r.template.replace(/\{(\w+)\}/g, (m, k) => r.params?.[k] ? String(r.params[k].value) : m) : r.text;
+async function loadRules() {
+  try { const d = await (await fetch('/api/rules')).json(); rules = d.rules || []; ruleGroups = d.groups || []; rulesMeta = { saved: d.saved !== false, defaults: d.defaults || {} }; rulesLoaded = true; $('#rerr').textContent = ''; }
+  catch (e) { $('#rerr').textContent = 'Could not load the rules: ' + e.message; }
+  renderRules();
+}
+function ruleCount(note) { $('#rcount').textContent = `${rules.filter(r => r.on).length} of ${rules.length} on` + (note ? ' · ' + note : ''); }
+function saveRules() { ruleCount('saving…'); clearTimeout(ruleTimer); ruleTimer = setTimeout(async () => {
+  try { const r = await fetch('/api/rules', { method: 'POST', body: JSON.stringify({ rules }) }); ruleCount(r.ok ? 'saved' : 'SAVE FAILED'); if (r.ok && !rulesMeta.saved) { rulesMeta.saved = true; const c = $('#useDefaults'); if (c) c.remove(); } } catch (e) { ruleCount('SAVE FAILED'); } }, 400); }
+function renderRules() {
+  const groups = [...ruleGroups]; rules.forEach(r => { if (!groups.includes(r.group)) groups.push(r.group); });
+  $('#rules').innerHTML = groups.filter(g => rules.some(r => r.group === g)).map(g => `<div class="rg"><label>${esc(g)}</label>` + rules.filter(r => r.group === g).map(r => {
+    let body;
+    if (r.kind === 'preset') {
+      const t = r.template ? r.template.split(/(\{\w+\})/).map(part => { const k = (/^\{(\w+)\}$/.exec(part) || [])[1], p = k && r.params?.[k];
+        if (!p) return esc(part);
+        return p.type === 'number' ? `<input type="number" min="0" step="any" data-p="${k}" value="${esc(p.value)}" aria-label="${k}">`
+          : `<input type="text" data-p="${k}" value="${esc(p.value)}" list="dl_${r.id}_${k}" aria-label="${k}"><datalist id="dl_${r.id}_${k}">${(p.options || []).map(o => `<option value="${esc(o)}">`).join('')}</datalist>`; }).join('') : esc(r.text);
+      body = `<span class="rt">${t}${r.check ? '<span class="chk" data-tip="cutvelvet audit and publish fail on this while the rule is on">checked automatically</span>' : ''}</span>`;
+    } else body = `<input type="text" class="rtx" value="${esc(r.text)}" aria-label="Rule text">`;
+    if (r.note) body += `<input type="text" class="rn" value="${esc(r.note)}" aria-label="Detail for this rule" data-tip="Detail given to the agent along with the rule">`;
+    return `<div class="rule${r.on ? ' on' : ''}" data-id="${esc(r.id)}"><input type="checkbox" class="tg" ${r.on ? 'checked' : ''} aria-label="Rule on or off" data-tip="On: the agent is given this rule with every Run. Off: ignored."><div class="rb">${body}</div>${r.kind === 'custom' ? '<button class="px" aria-label="Delete rule" data-tip="Delete rule">×</button>' : ''}</div>`;
+  }).join('') + '</div>').join('') || (rulesLoaded ? '<span class="hint">No rules yet.</span>' : '');
+  ruleCount();
+  const none = rulesLoaded && !rules.some(r => r.on);
+  // Personal defaults are offered, never applied on their own: only while this project has no saved rules yet.
+  if (rulesLoaded && !rulesMeta.saved && rulesMeta.defaults.exists) { $('#rules').insertAdjacentHTML('afterbegin', `<div class="empty" id="useDefaults"><b>Start from your defaults?</b><span>You saved a set of rules as your defaults (${rulesMeta.defaults.on || 0} switched on). This project has no rules of its own yet.</span><span class="ctl"><button id="useDefaultsBtn">Start from my defaults</button></span></div>`);
+    $('#useDefaultsBtn').addEventListener('click', async () => { try { const d = await (await fetch('/api/rules/use-defaults', { method: 'POST' })).json(); if (!d.ok) throw new Error(d.error || 'failed'); rules = d.rules; rulesMeta.saved = true; renderRules(); ruleCount('started from your defaults'); } catch (e) { $('#rerr').textContent = 'Could not load your defaults: ' + e.message; } }); }
+  if (none) $('#rules').insertAdjacentHTML('afterbegin', '<div class="empty"><b>No rules are on</b><span>That is fine: the agent then follows only your notes. Tick any suggestion below to make it a standing rule, or type your own in the box above.</span></div>');
+}
+const ruleOf = el => { const row = el.closest('.rule'); return row ? rules.find(r => r.id === row.dataset.id) : null; };
+$('#rules').addEventListener('change', e => { const r = ruleOf(e.target); if (!r || !e.target.classList.contains('tg')) return; r.on = e.target.checked; e.target.closest('.rule').classList.toggle('on', r.on); saveRules(); const card = $('#rules > .empty:not(#useDefaults)'); if (card && rules.some(x => x.on)) card.remove(); });
+$('#rules').addEventListener('input', e => { const r = ruleOf(e.target), el = e.target; if (!r || el.classList.contains('tg')) return;
+  if (el.dataset.p) { const p = r.params[el.dataset.p]; if (p.type === 'number') { const n = parseFloat(el.value); if (!isFinite(n) || n < 0) return; p.value = n; } else { if (!el.value.trim()) return; p.value = el.value.trim(); } r.text = ruleText(r); }
+  else if (el.classList.contains('rtx')) { if (!el.value.trim()) return; r.text = el.value; }
+  else if (el.classList.contains('rn')) r.note = el.value;
+  saveRules(); });
+$('#rules').addEventListener('focusout', e => { const r = ruleOf(e.target); if (!r) return;   // an emptied field snaps back to what is stored
+  if (e.target.classList.contains('rtx') && !e.target.value.trim()) e.target.value = r.text; else if (e.target.dataset.p && !String(e.target.value).trim()) e.target.value = r.params[e.target.dataset.p].value; });
+$('#rules').addEventListener('click', e => { if (!e.target.classList.contains('px')) return; const r = ruleOf(e.target); rules = rules.filter(x => x !== r); renderRules(); saveRules(); });
+function addRule(text, group) {
+  const r = { id: 'c-' + Math.random().toString(16).slice(2, 10).padEnd(8, '0'), text: text.replace(/\s+/g, ' ').trim(), on: true, kind: 'custom', group };
+  if (!r.text) return null; rules.push(r); renderRules(); saveRules(); return r;
+}
+$('#radd').addEventListener('keydown', e => { if (e.key !== 'Enter') return; if (addRule($('#radd').value, 'Your rules')) $('#radd').value = ''; });
+// A note that states a general preference becomes a standing rule: copy it over, then let the editor reword it.
+function makeRule(noteText) {
+  const r = addRule(noteText.replace(/\[\d+:\d\d(\.\d)?\]/g, ' '), 'From notes'); if (!r) return; setTab('rules');
+  const el = document.querySelector(`.rule[data-id="${r.id}"] .rtx`); if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); el.select(); }
+}
+$('#rdefaults').addEventListener('click', async () => {
+  clearTimeout(ruleTimer); $('#rerr').textContent = '';
+  try { await fetch('/api/rules', { method: 'POST', body: JSON.stringify({ rules }) }); const d = await (await fetch('/api/rules/defaults', { method: 'POST' })).json();
+    if (!d.ok) throw new Error(d.error || 'failed'); ruleCount('saved as your defaults — new projects start from these (' + d.path + ')'); }
+  catch (e) { $('#rerr').textContent = 'Could not save your defaults: ' + e.message; }
+});
+
+/* ------------------------------------------------------------------ run notes */
+let run = { state: 'idle' }, runTimer, runErr = '', jobOpen = false, lastState = 'idle', lastStarted;
+const hasNotes = () => !!((fb.overall || '').trim() || Object.values(fb.shots || {}).some(e => e && ((e.note || '').trim() || (Array.isArray(e.pins) && e.pins.length) || e.verdict === 'fix' || e.verdict === 'cut')));
+const dur = s => s >= 60 ? `${Math.floor(s / 60)}m ${String(Math.floor(s % 60)).padStart(2, '0')}s` : `${Math.floor(s)}s`;
+async function pollRun() {
+  clearTimeout(runTimer);
+  try { run = await (await fetch('/api/run?version=' + encodeURIComponent(ver), { signal: AbortSignal.timeout(8000) })).json(); } catch (e) {}
+  // a job ended: either we watched it stop, or it started and finished between two polls (never on the first poll after loading)
+  const ended = run.state !== 'running' && run.state !== 'idle' && (lastState === 'running' || (lastStarted !== undefined && run.started !== lastStarted));
+  lastState = run.state; lastStarted = run.started || null;
+  if (ended) jobEnded();
+  paintRun(); if (!$('#perf').hidden) paintAgentResult();
+  runTimer = setTimeout(pollRun, run.state === 'running' ? 1000 : 5000);
+}
+function jobEnded() {   // a Run rewrites the timeline file: let an open, unedited Live pick it up
+  if (run.kind === 'agenttest') { paintAgentResult(); return; }   // shown in Settings, not in the progress panel
+  jobOpen = true; const a = liveApi(); if (a && run.kind === 'run' && run.timeline === live.tid && !live.dirty) a.reload();
+  if (run.kind === 'newcut') {   // a new cut has landed: refresh the timeline list and open its first version in Review
+    fetch('/api/timeline').then(r => r.json()).then(d => { timelines = d.timelines || []; fillCuts(); }).catch(() => {});
+    if (run.new_version) refreshVersions().then(() => { $('#ver').value = run.new_version; if ($('#ver').value === run.new_version) { load(run.new_version); setTab('review'); } });
+  }
+}
+async function refreshVersions() {
+  const vs = await (await fetch('/versions')).json();
+  if (vs.join() !== verList().join()) { fillVer(vs, ver); if (vs.length && startOn) location.reload(); }
+}
+const jobName = () => run.kind === 'agenttest' ? 'Testing the agent' : run.kind === 'publish' ? `Publishing ${run.timeline}` : run.kind === 'newcut' ? `Making a new cut · ${run.timeline}` : run.version ? `Running notes · ${run.version}` : `Working · ${run.timeline}`;
+const jobNoun = () => run.kind === 'agenttest' ? 'Agent test' : run.kind === 'publish' ? 'Publish' : run.kind === 'newcut' ? 'New cut' : 'Run';
+// What Publish would publish: Live's cut on the Live tab, else the cut of the version being watched, else -- on a project
+// with a cut but no version yet -- that cut.
+const pubTarget = () => tab === 'live' ? live.tid : (chapter(ver) || (!ver && timelines[0] ? timelines[0].id : null));
+let paintRunSig = '';
+function paintRun() {
+  const sig = JSON.stringify([run, tab, ver, live, hasNotes(), jobOpen, runErr, timelines.length, verList()]);
+  if (sig === paintRunSig) return; paintRunSig = sig;
+  const running = run.state === 'running', pubTid = pubTarget();
+  // Run notes: always in the header on Review; when it cannot run, the reason sits right beside it
+  let why = '';   // plain words: shown in the button's tooltip and as a line at the top of the notes column, never in the bar
+  if (running) why = '';
+  else if (!ver) why = 'There is no version to run notes on yet.';
+  else if (!hasNotes()) why = 'Write a note on any shot, then Run notes.';
+  else if (run.agent_error) why = /^No agent/.test(run.agent_error) ? 'No agent set up — set one up in Settings.' : run.agent_error;
+  else if (run.check && run.check.version === ver && !run.check.ok && !/^no notes/.test(run.check.reason)) why = 'Run notes is not available: ' + run.check.reason;
+  const off = (el, on) => { el.setAttribute('aria-disabled', on ? 'true' : 'false'); };
+  off($('#run'), running || !!why); $('#run').classList.toggle('primary', !(running || why));
+  $('#run').dataset.tip = running ? 'A job is already running — see its progress on the right.' : why ? why : `Starts your agent (${run.agent || 'agent'}) on the notes for ${ver}: it changes the cut, checks it, renders and publishes the next version.\nThis is billed to your own agent account, and you can cancel it.`;
+  const m = /^(.+)_v(\d+)$/.exec(ver || ''), newer = m && verList().some(o => { const x = /^(.+)_v(\d+)$/.exec(o); return x && x[1] === m[1] && +x[2] > +m[2]; });
+  const hint = why || (!running && newer ? 'A newer version exists — these notes will be applied to the cut as it is now.' : '');
+  $('#runHint').hidden = !hint || !ver; $('#runHint').textContent = hint; $('#runHint').style.color = why ? '' : 'var(--dim)'; $('#runHint').style.cursor = run.agent_error ? 'pointer' : ''; $('#runHint').style.textDecoration = run.agent_error ? 'underline' : '';
+  // Publish: the timeline as saved on disk, no agent
+  const canPub = !running && !!pubTid && timelines.some(t => t.id === pubTid);
+  off($('#pub'), !canPub); $('#pub').textContent = tab === 'live' && live.dirty ? 'Save and publish' : 'Publish';
+  $('#pub').dataset.tip = running ? 'A job is already running' : canPub ? `Render ${pubTid} as it is saved now and add it to Review as the next version.\nNo agent, no cost: only shots that changed are rendered again.` : 'There is no timeline to publish for this version';
+  // compact job state, on every tab
+  const chip = $('#jobChip'), active = run.state && run.state !== 'idle';
+  chip.hidden = !active;
+  if (active) { chip.className = 'q chip ' + run.state;
+    $('#jobChipTxt').textContent = running ? `${jobName()} · ${dur(run.elapsed || 0)}` : run.kind === 'agenttest' ? (run.state === 'done' ? 'Agent test passed' : `Agent test ${run.state}`) : run.state === 'done' ? (run.new_version ? `Done · ${run.new_version}` : 'Finished — nothing published') : `${jobNoun()} ${run.state}`;
+    chip.dataset.tip = $('#jobChipTxt').textContent + (jobOpen ? '\nClick to hide progress' : '\nClick to show progress'); }
+  // "the cut has moved on" line under the player
+  const cut = run.cut && run.cut.timeline === chapter(ver) ? run.cut : null, line = $('#cutLine');
+  line.hidden = !(cut && cut.changed) || running;
+  if (!line.hidden && line.dataset.for !== cut.latest) { line.dataset.for = cut.latest; line.innerHTML = `The cut has changed since ${esc(cut.latest)} was published — <button class="lnk" id="cutPub">Publish to see it</button>`; $('#cutPub').addEventListener('click', () => $('#pub').click()); }
+  // progress panel
+  const panel = $('#jobPanel'); panel.hidden = !(jobOpen && (active || runErr)); if (panel.hidden) return;
+  $('#runErr').textContent = runErr;
+  const label = !active ? '' : { running: run.kind === 'publish' ? 'Publishing' : run.kind === 'newcut' ? 'Making a new cut' : 'Running', done: run.kind === 'agenttest' ? 'Agent test passed' : run.new_version ? 'Done' : 'Finished — nothing published', failed: 'Failed', cancelled: 'Cancelled' }[run.state] || run.state;
+  $('#runState').textContent = label; $('#runState').className = 'st ' + (run.state === 'done' && !run.new_version && run.kind !== 'agenttest' ? 'failed' : run.state);
+  $('#runMeta').textContent = !active ? '' : `${run.version || run.timeline} · ${dur(run.elapsed || 0)}` + (typeof run.cost === 'number' ? ' · $' + run.cost.toFixed(2) : '') + (run.error ? ' · ' + run.error : '') + (run.log ? ' · ' + run.log : '');
+  $('#runCancel').hidden = !running;
+  const log = $('#runLog'), stick = log.scrollTop + log.clientHeight >= log.scrollHeight - 8, text = (run.tail || []).join('\n');
+  if (log.textContent !== text) { log.textContent = text; if (stick) log.scrollTop = log.scrollHeight; }
+  const open = $('#runOpen'); open.hidden = !run.new_version || (run.new_version === ver && tab === 'review'); if (run.new_version) { open.textContent = 'Open ' + run.new_version + ' in Review'; if (!verList().includes(run.new_version)) refreshVersions().then(paintRun); }
+  $('#runChanges').hidden = !run.changes; if (run.changes) $('#runChanges pre').textContent = run.changes.trim();
+}
+$('#jobChip').addEventListener('click', e => { e.stopPropagation(); jobOpen = !jobOpen; paintRun(); });
+$('#run').addEventListener('click', async e => {
+  if ($('#run').getAttribute('aria-disabled') === 'true') { if (run.agent_error && run.state !== 'running') { e.stopPropagation(); openSettings('agent'); } return; }
+  $('#run').setAttribute('aria-disabled', 'true'); runErr = '';
+  try {
+    if (!(await saveNow())) throw new Error('the notes could not be saved');
+    let est = null; try { est = await (await fetch('/api/run/estimate?version=' + encodeURIComponent(ver))).json(); } catch (e) {}
+    if (!confirm(`Hand the notes for ${ver} to the agent?\n\nIt will edit the timeline, render it and publish the next version.\n\n` + estimateText(est))) { paintRun(); return; }
+    // A project can bring its own instructions for the agent. They are only used once approved on this computer.
+    if (run.prompt && !run.prompt.approved && confirm(`This project brings its own instructions for the agent (.cutvelvet/${run.prompt.name}). You have not approved them on this computer. They begin:\n\n${run.prompt.preview.slice(0, 600)}${run.prompt.preview.length > 600 ? '…' : ''}\n\nOK: approve them and use them from now on.\nCancel: use cutvelvet’s standard instructions for this run.`))
+      await fetch('/api/agent/prompt', { method: 'POST', body: JSON.stringify({ name: run.prompt.name, digest: run.prompt.digest }) });
+    const d = await (await fetch('/api/run', { method: 'POST', body: JSON.stringify({ version: ver }) })).json();
+    if (!d.ok) throw new Error(d.error || 'the run could not be started');
+  } catch (e) { runErr = 'Run not started: ' + e.message; }
+  jobOpen = true; pollRun();
+});
+// Publish the timeline as it is on disk. From Live, unsaved edits are saved first (the button says so).
+$('#pub').addEventListener('click', async () => {
+  const tid = pubTarget(); if (!tid) return;
+  if ($('#pub').getAttribute('aria-disabled') === 'true') return;
+  $('#pub').setAttribute('aria-disabled', 'true'); runErr = '';
+  try {
+    const a = liveApi(), unsaved = a && live.tid === tid && live.dirty;
+    if (unsaved && tab !== 'live' && !confirm(`Live has unsaved changes to ${tid}. Save them and publish?\n\nCancel to leave them unsaved; nothing is published.`)) { paintRun(); return; }
+    if (unsaved && !(await a.save())) throw new Error('the Live changes could not be saved — see the message in Live');
+    let est = null; try { est = await (await fetch('/api/publish/estimate?timeline=' + encodeURIComponent(tid))).json(); } catch (e) {}
+    if (!confirm(`Publish ${tid} as a new version${unsaved ? ' (your Live changes were just saved)' : ''}?\n\nNo agent is involved: the cut is rendered as it is saved now and added to Review.\n\n` + publishText(est))) { paintRun(); return; }
+    const d = await (await fetch('/api/publish', { method: 'POST', body: JSON.stringify({ timeline: tid }) })).json();
+    if (!d.ok) throw new Error(d.error || 'the publish could not be started');
+  } catch (e) { runErr = 'Not published: ' + e.message; }
+  jobOpen = true; pollRun();
+});
+function publishText(e) {
+  if (!e || !e.total) return 'No estimate is available.';
+  const list = (e.ids || []).slice(0, 12).join(', ') + ((e.ids || []).length > 12 ? '…' : '');
+  const what = !e.shots ? `Every shot is already rendered, so this only joins them up (a few seconds).` : e.shots === e.total ? `All ${e.total} shots will render` : `${e.shots} of ${e.total} shots will re-render (${list}); the rest are reused from the cache`;
+  if (!e.shots) return what;
+  const cost = e.timed ? `\nThis will use up to about ${e.use_cores} of your ${e.cores} cores for ${e.minutes < 1 ? 'under a minute' : 'roughly ' + Math.round(e.minutes) + (Math.round(e.minutes) === 1 ? ' minute' : ' minutes')}.` : `\nIt will use up to about ${e.use_cores} of your ${e.cores} cores. First render, no time estimate yet.`;
+  return `${what}, ${e.jobs} at a time (${e.mode} performance setting).${cost}`;
+}
+// An honest guess at what a Run will cost this computer, from how long shots took to render before.
+function estimateText(e) {
+  if (!e || !e.total) return 'No estimate is available for this run.';
+  const what = e.all ? `An overall note can touch every shot, so up to all ${e.total} shots may re-render` : e.shots ? `About ${e.shots} of ${e.total} shots will re-render (the ones with notes or pins${e.shots > 0 ? ', plus any not rendered yet' : ''})` : `No shot needs re-rendering yet; that depends on what the agent changes`;
+  const how = `${e.jobs} at a time (${e.mode} performance setting)`;
+  const cost = !e.shots ? '' : e.timed ? `\nThis will use up to about ${e.use_cores} of your ${e.cores} cores for ${e.minutes < 1 ? 'under a minute' : 'roughly ' + Math.round(e.minutes) + (Math.round(e.minutes) === 1 ? ' minute' : ' minutes')} of rendering, plus the agent's own working time.`
+    : `\nIt will use up to about ${e.use_cores} of your ${e.cores} cores while rendering. First run, no time estimate yet.`;
+  return `${what}, ${how}.${cost}`;
+}
+$('#runCancel').addEventListener('click', async () => { $('#runCancel').disabled = true; try { await fetch('/api/run/cancel', { method: 'POST' }); } catch (e) {} $('#runCancel').disabled = false; pollRun(); });
+$('#runHide').addEventListener('click', () => { jobOpen = false; runErr = ''; paintRun(); });
+$('#runOpen').addEventListener('click', async () => { await refreshVersions(); $('#ver').value = run.new_version; if ($('#ver').value === run.new_version) { if (ver !== run.new_version) load(run.new_version); setTab('review'); } });
+document.addEventListener('click', e => { if (jobOpen && !e.target.closest('#jobPanel') && !e.target.closest('#run') && !e.target.closest('#pub') && run.state !== 'running') { jobOpen = false; runErr = ''; paintRun(); } });
+
+/* ------------------------------------------------------------------ drop files / folders -> footage/inbox */
+const VIDEO_EXT = ['.mp4', '.mov', '.m4v', '.webm', '.mkv', '.avi', '.mxf'];
+const isVideo = n => VIDEO_EXT.includes((n.match(/\.[^.]+$/) || [''])[0].toLowerCase());
+const mb = n => n >= 1e9 ? (n / 1e9).toFixed(2) + ' GB' : (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + ' MB';
+let dragDepth = 0, upQueue = [], upBusy = false, upXhr = null, upStop = false;
+const hasFiles = e => !!e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+document.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('#drop').hidden = false; });
+document.addEventListener('dragover', e => { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+document.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $('#drop').hidden = true; } });
+document.addEventListener('drop', async e => {
+  if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; setTab('library');
+  const found = await collectDropped(e.dataTransfer), vids = found.filter(x => isVideo(x.file.name));
+  if (!vids.length) { $('#lerr').textContent = found.length ? `Nothing copied: none of the ${found.length} dropped file(s) is a video (${VIDEO_EXT.join(' ')}).` : 'Nothing copied: the drop held no files.'; return; }
+  $('#lerr').textContent = found.length > vids.length ? `${found.length - vids.length} dropped file(s) skipped — not video.` : '';
+  upQueue.push(...vids); if (!upBusy) uploadQueue();
+});
+// Entries must be taken from the DataTransfer synchronously; folders are then walked asynchronously.
+function collectDropped(dt) {
+  const entries = [], out = [];
+  for (const it of [...(dt.items || [])]) { if (it.kind !== 'file') continue; const en = it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; if (en) entries.push(en); else { const f = it.getAsFile(); if (f) out.push({ file: f, dir: '' }); } }
+  if (!entries.length && !out.length) for (const f of [...(dt.files || [])]) out.push({ file: f, dir: '' });
+  const walk = async (en, dir, depth) => {
+    if (en.isFile) { const f = await new Promise(res => en.file(res, () => res(null))); if (f) out.push({ file: f, dir }); }
+    else if (en.isDirectory && depth < 4) { const rd = en.createReader(), sub = dir ? dir + '/' + en.name : en.name;
+      for (;;) { const batch = await new Promise(res => rd.readEntries(res, () => res([]))); if (!batch.length) break; for (const c of batch) await walk(c, sub, depth + 1); } }
+  };
+  return (async () => { for (const en of entries) await walk(en, '', 0); return out; })();
+}
+function sendFile(it, onProgress) { return new Promise(res => {
+  const x = new XMLHttpRequest(); upXhr = x; x.open('POST', '/api/library/upload?name=' + encodeURIComponent(it.file.name) + '&dir=' + encodeURIComponent(it.dir));
+  x.upload.onprogress = e => onProgress(e.loaded);
+  x.onload = () => { let d = {}; try { d = JSON.parse(x.responseText); } catch (e) {} res(x.status === 200 && d.ok ? d : { ok: false, error: d.error || 'HTTP ' + x.status }); };
+  x.onerror = () => res({ ok: false, error: 'the copy was interrupted' }); x.onabort = () => res({ ok: false, aborted: true });
+  x.send(it.file);   // a File body is streamed from disk by the browser, never held in memory
+}); }
+async function uploadQueue() {
+  upBusy = true; upStop = false; $('#upl').hidden = false; $('#uplCancel').hidden = false; let n = 0, okN = 0, dup = 0; const errs = [];
+  while (upQueue.length && !upStop) {
+    const it = upQueue.shift(); n++;
+    const r = await sendFile(it, done => { $('#uplText').textContent = `Copying ${n} of ${n + upQueue.length} — ${it.file.name} — ${mb(done)} of ${mb(it.file.size)}`; $('#uplBar').style.width = (it.file.size ? done / it.file.size * 100 : 0) + '%'; });
+    if (r.ok) { if (r.skipped) dup++; else okN++; } else if (!r.aborted) errs.push(`${it.file.name}: ${r.error}`);
+  }
+  const left = upQueue.length; upQueue = []; upBusy = false; upXhr = null; $('#uplCancel').hidden = true; $('#uplBar').style.width = '100%';
+  $('#uplText').textContent = `Copied ${okN} clip${okN === 1 ? '' : 's'} into footage/inbox` + (dup ? ` · ${dup} already there` : '') + (upStop ? ` · cancelled${left ? ', ' + left + ' not copied' : ''}` : '') + (errs.length ? ` · ${errs.length} failed` : '');
+  if (errs.length) $('#lerr').textContent = errs.join(' · ');
+  loadLibrary(); setTimeout(() => { if (!upBusy) $('#upl').hidden = true; }, 8000);
+}
+$('#uplCancel').addEventListener('click', () => { upStop = true; if (upXhr) upXhr.abort(); });
+
+/* ------------------------------------------------------------------ machine meter + performance */
+let sys = null, sysTimer;
+async function pollSys() {
+  clearTimeout(sysTimer);
+  try { sys = await (await fetch('/api/system', { signal: AbortSignal.timeout(8000) })).json(); } catch (e) { sys = null; }
+  paintSys(); sysTimer = setTimeout(pollSys, document.hidden ? 15000 : 2000);
+}
+function paintSys() {
+  const m = $('#meter'); if (!sys) { $('#meterTxt').textContent = 'Offline'; m.className = 'q meter'; m.dataset.tip = 'The cutvelvet server is not answering.'; return; }
+  const pf = sys.performance || {}, own = Math.min(100, 100 * ((sys.cutvelvet || {}).cores_used || 0) / (sys.cores || 1));
+  const cls = 'q meter ' + sys.level, word = pf.mode ? pf.mode[0].toUpperCase() + pf.mode.slice(1) : 'Performance';   // polled every 2 s: write only what changed
+  if (m.className !== cls) m.className = cls; $('#gAll').style.transform = `scaleX(${(Math.max(own, sys.busy || 0) / 100).toFixed(3)})`; $('#gOwn').style.transform = `scaleX(${(own / 100).toFixed(3)})`;
+  if ($('#meterTxt').textContent !== word) $('#meterTxt').textContent = word;
+  m.dataset.tip = (sys.lines.length ? 'cutvelvet is ' + sys.lines.join(';\n') : 'cutvelvet is idle') + '\n' + sys.machine + '\nPerformance: ' + (pf.mode || '?') + ' (' + (pf.jobs || '?') + ' at a time). Click for settings: performance and agent.';
+  if ($('#perf').hidden) return;
+  $('#sysLines').innerHTML = sys.lines.length ? 'Right now cutvelvet is:<ul>' + sys.lines.map(l => `<li>${esc(l)}</li>`).join('') + '</ul>' : 'cutvelvet is idle.';
+  $('#sysMachine').textContent = sys.machine;
+  const p = sys.performance, names = { light: 'Light', balanced: 'Balanced', fast: 'Fast' }, box = $('#perfModes');
+  if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   // do not redraw under the cursor
+  box.innerHTML = Object.keys(names).map(k => `<button data-m="${k}" class="${p.mode === k ? 'on' : ''}">${names[k]}<small>${p.options[k]} at a time</small></button>`).join('')
+    + `<span class="cust${p.mode === 'custom' ? ' on' : ''}">Custom<input type="number" id="perfN" min="1" max="${sys.cores * 2}" step="1" value="${p.mode === 'custom' ? p.jobs : ''}" placeholder="${p.jobs}" aria-label="Custom number of parallel jobs"></span>`;
+}
+async function setPerf(body) {
+  $('#perfErr').textContent = '';
+  try { const d = await (await fetch('/api/system/performance', { method: 'POST', body: JSON.stringify(body) })).json(); if (!d.ok) throw new Error(d.error); if (sys) sys.performance = d.performance; }
+  catch (e) { $('#perfErr').textContent = 'Could not save the setting: ' + e.message; }
+  if (document.activeElement && document.activeElement.id === 'perfN') document.activeElement.blur(); paintSys();
+}
+$('#perfModes').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (b) setPerf({ mode: b.dataset.m }); });
+$('#perfModes').addEventListener('change', e => { if (e.target.id !== 'perfN') return; const n = parseInt(e.target.value, 10); if (n >= 1) setPerf({ mode: 'custom', jobs: n }); });
+function openSettings(section) {   // the Settings popover: Performance and Agent
+  const box = $('#perf'); box.hidden = false; $('#meter').setAttribute('aria-expanded', true);
+  const r = $('#meter').getBoundingClientRect(); box.style.top = (r.bottom + 8) + 'px'; box.style.left = Math.max(12, Math.min(innerWidth - box.offsetWidth - 12, r.left)) + 'px';
+  paintSys(); loadAgent().then(() => { if (section === 'agent') $('#agentHead').scrollIntoView({ block: 'start' }); });
+}
+function closeSettings() { $('#perf').hidden = true; $('#meter').setAttribute('aria-expanded', false); }
+$('#meter').addEventListener('click', e => { e.stopPropagation(); if ($('#perf').hidden) openSettings(); else closeSettings(); });
+$('#runHint').addEventListener('click', e => { if (run.agent_error) { e.stopPropagation(); openSettings('agent'); } });
+
+/* Agent: which coding agent this computer starts, which model, and the exact command (kept in ~/.cutvelvet/settings.json) */
+let agent = null, agentSel = null;
+async function loadAgent() { try { agent = await (await fetch('/api/agent')).json(); $('#agentErr').textContent = ''; } catch (e) { $('#agentErr').textContent = 'Could not load the agent settings: ' + e.message; } paintAgent(); }
+async function saveAgent(body) {
+  $('#agentErr').textContent = ''; $('#agentSaved').textContent = 'Saving…';
+  try { const d = await (await fetch('/api/agent', { method: 'POST', body: JSON.stringify(body) })).json(); if (!d.ok) throw new Error(d.error || 'not saved'); agent = d; $('#agentSaved').textContent = 'Saved on this computer'; }
+  catch (e) { $('#agentErr').textContent = e.message[0].toUpperCase() + e.message.slice(1) + '.'; $('#agentSaved').textContent = ''; }
+  paintAgent(true); pollRun();
+}
+function paintAgent(force) {
+  if (!agent) return; const eff = agent.effective || {}, cur = agent.choice || eff.id, k = (agent.known || []).find(x => x.id === cur) || null; agentSel = k ? k.id : null;
+  $('#agentNone').hidden = agent.any_found;
+  if (!agent.any_found) $('#agentNoneTxt').textContent = 'Run notes and New cut need a command-line coding agent. Install one of these, sign in to it once in a terminal, then reopen this panel: ' + agent.known.filter(x => x.id !== 'custom').map(x => x.name).join(', ') + '. Or set a Custom command below. Everything else in cutvelvet works without one.';
+  const pj = agent.project, pb = $('#agentProj'); pb.hidden = !pj;
+  if (pj) { pb.innerHTML = `<span>${pj.approved ? 'This project’s own command is in use on this computer:' : 'This project asks to use its own command. It is <b>not used</b> unless you allow it — only do that if you trust where the project came from:'}</span><code>${esc(pj.command)}</code><span class="ctl"><button id="agentProjBtn">${pj.approved ? 'Stop using it' : 'Use this command on this computer'}</button>${pj.pending ? '<button id="agentProjNo">Ignore it and use my own agent</button>' : ''}</span>${pj.pending ? '<span class="hint">Run notes and New cut stay off until you choose.</span>' : ''}`;
+    $('#agentProjBtn').addEventListener('click', () => saveAgent({ approve_project: !pj.approved, project_digest: pj.digest }));
+    if (pj.pending) $('#agentProjNo').addEventListener('click', () => saveAgent({ approve_project: false, project_digest: pj.digest })); }
+  $('#agentList').innerHTML = (agent.known || []).map(x => { const on = x.id === cur && eff.source !== 'project';
+    const st = x.id === 'custom' ? '' : x.found ? `<span class="tag ok">installed</span>` : `<span class="tag no">not installed</span>`;
+    const tested = x.id === 'custom' ? '' : x.tested ? `<span class="tag ok">tested</span>` : `<span class="tag">untested</span>`;
+    return `<label class="ag${on ? ' on' : ''}"><input type="radio" name="agent" value="${x.id}" ${on ? 'checked' : ''}><span><b>${esc(x.name)}</b>${st}${tested}<small>${esc(x.id !== 'custom' && !x.found ? x.install : x.note)}</small></span></label>`; }).join('');
+  const typingHere = !force && [$('#agentCmd'), $('#agentModel')].includes(document.activeElement);
+  if (!typingHere) { $('#agentCmd').value = k ? k.command : ''; $('#agentModel').value = agent.model || ''; }
+  const proj = eff.source === 'project';
+  $('#agentCmd').disabled = proj || !k; $('#agentModel').disabled = proj || !k || !k.model_flag; $('#agentReset').disabled = proj || !k || k.id === 'custom' || !k.edited;
+  $('#agentModelNote').textContent = !k ? '' : k.model_flag ? `Added to the command as ${k.model_flag} <name>. Use a name your agent accepts.` : 'For a custom command, put the model in the command itself.';
+  $('#agentCmdNote').textContent = proj ? 'The project’s own command is in use (see above).' : !k ? 'Choose an agent above.' : '{prompt} is replaced by the instructions cutvelvet writes; {project} by the project folder and {guide} by the folder with the cutvelvet guide. Changes are saved when you click away.';
+  $('#agentRuns').textContent = eff.command ? 'Runs as:  ' + eff.command + (eff.found ? '' : '\n(not found on this computer)') : '';
+  $('#agentTest').disabled = !eff.command || !eff.found || run.state === 'running';
+  paintAgentResult();
+}
+function paintAgentResult() {
+  const el = $('#agentResult'); if (run.kind !== 'agenttest' || run.state === 'idle') { if (!el.dataset.keep) el.textContent = ''; return; }
+  el.dataset.keep = 1; const secs = Math.round(run.elapsed || 0), tail = (run.tail || []).slice(1).filter(l => !/^— /.test(l));
+  if (run.state === 'running') { el.className = ''; el.textContent = `Testing… ${secs}s`; }
+  else if (run.state === 'done') { el.className = 'good'; el.textContent = `It works: the agent answered in ${secs}s` + (typeof run.cost === 'number' ? `, cost $${run.cost.toFixed(2)}` : ', cost not reported') + '.' + (tail.length ? '\n' + tail.filter(l => !/^agent (started|finished)/.test(l)).slice(-2).join('\n') : ''); }
+  else { el.className = 'bad'; el.textContent = (run.state === 'cancelled' ? 'Test cancelled.' : `It did not work (${run.error || 'failed'}).`) + (tail.length ? '\n' + tail.slice(0, 6).join('\n') : '') + (run.log ? '\nFull log: ' + run.log : ''); }
+  $('#agentTest').disabled = run.state === 'running' || !(agent && agent.effective && agent.effective.found);
+}
+$('#agentList').addEventListener('change', e => { if (e.target.name === 'agent') saveAgent({ choice: e.target.value }); });
+$('#agentModel').addEventListener('change', () => saveAgent({ choice: agentSel, model: $('#agentModel').value.trim() }));
+$('#agentCmd').addEventListener('change', () => { if (agentSel) saveAgent({ choice: agentSel, command: $('#agentCmd').value }); });
+$('#agentReset').addEventListener('click', () => { if (agentSel) saveAgent({ choice: agentSel, command: '' }); });
+$('#agentTest').addEventListener('click', async () => {
+  if (!confirm('Test the agent?\n\nThis starts your agent for real with one tiny prompt (“reply with the single word ok”). It is billed to your agent account like any other call — about the cost of one short reply (10 to 30 cents with Claude Code when we tried it) — and takes up to a minute or two.')) return;
+  $('#agentErr').textContent = ''; $('#agentResult').className = ''; $('#agentResult').dataset.keep = 1; $('#agentResult').textContent = 'Starting…'; $('#agentTest').disabled = true;
+  try { const d = await (await fetch('/api/agent/test', { method: 'POST' })).json(); if (!d.ok) throw new Error(d.error || 'could not start'); }
+  catch (e) { $('#agentResult').className = 'bad'; $('#agentResult').textContent = 'The test could not start: ' + e.message; }
+  pollRun();
+});
+document.addEventListener('click', e => { if (!$('#perf').hidden && !e.target.closest('#perf')) closeSettings(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#perf').hidden) { if (typing()) document.activeElement.blur(); else closeSettings(); } });
+
+/* one shared tooltip for anything with data-tip: appears after a short pause, then follows the pointer without flicker */
+const tip = $('#tip'); let tipEl = null, tipTimer = 0, tipXY = [0, 0];
+function placeTip() { const w = tip.offsetWidth, h = tip.offsetHeight, [x, y] = tipXY;
+  tip.style.left = Math.max(4, Math.min(innerWidth - w - 4, x + 12)) + 'px'; tip.style.top = (y + 18 + h > innerHeight ? y - h - 10 : y + 18) + 'px'; }
+function hideTip() { clearTimeout(tipTimer); tipEl = null; tip.hidden = true; }
+document.addEventListener('mousemove', e => {
+  const el = e.target.closest ? e.target.closest('[data-tip]') : null; tipXY = [e.clientX, e.clientY];
+  if (!el || !el.dataset.tip) { hideTip(); return; }
+  if (el === tipEl && !tip.hidden) { if (tip.textContent !== el.dataset.tip) tip.textContent = el.dataset.tip; placeTip(); return; }
+  if (el === tipEl) return;                       // still waiting on this one
+  const instant = !tip.hidden || el.id === 'pbar'; // moving from one tip to the next, or scrubbing: no pause
+  clearTimeout(tipTimer); tipEl = el;
+  const show = () => { if (tipEl !== el || !el.isConnected || !el.dataset.tip) return; tip.textContent = el.dataset.tip; tip.hidden = false; placeTip(); };
+  if (instant) show(); else { tip.hidden = true; tipTimer = setTimeout(show, 350); }
+});
+document.addEventListener('mouseleave', hideTip);
+document.addEventListener('click', hideTip);
+// The same words for people who do not hover: keyboard focus shows the tip, and screen readers get it as a description.
+document.addEventListener('focusin', e => { const el = e.target.closest && e.target.closest('[data-tip]'); if (!el || !el.matches(':focus-visible')) return; const r = el.getBoundingClientRect(); tipXY = [r.left, r.bottom - 10]; tipEl = el; tip.textContent = el.dataset.tip; tip.hidden = false; placeTip(); });
+document.addEventListener('focusout', hideTip);
+function describeTips(root) { for (const el of (root || document).querySelectorAll('[data-tip]')) { const t = el.dataset.tip; if (!t) continue;
+  if (el.getAttribute('aria-description') !== t) el.setAttribute('aria-description', t);
+  if (!el.getAttribute('aria-label') && !el.textContent.trim() && !el.labels?.length) el.setAttribute('aria-label', t); } }
+// Sweeps are throttled, not debounced: the playhead changes the page every frame, so a debounce would never fire.
+let tipSweep = 0; new MutationObserver(ms => {
+  if (tipSweep || !ms.some(m => m.type === 'attributes' || [...m.addedNodes].some(n => n.nodeType === 1))) return;   // text-only changes (timecodes) need no sweep
+  tipSweep = setTimeout(() => { tipSweep = 0; describeTips(); }, 500); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-tip'] });
+describeTips();
+
+/* ------------------------------------------------------------------ help flyout */
+// All the guidance lives here, one entry per tab, so it is easy to edit. An embedded page (Live, New cut) can add to or
+// replace its own entry by posting { cutvelvetHelp: { tab: 'live', help: { what, how, keys, when } } } to this window.
+const HELP = {
+  loop: ['Watch a version', 'Write notes on the shots', 'Run notes, or fix it yourself in Live', 'Publish', 'Watch the new version'],
+  review: { title: 'Review',
+    what: 'This is where you watch a version of the cut and say what should change. Your notes are saved as you type and belong to the version you are watching.',
+    how: ['Pick a version next to the project name and press play.', 'When something is wrong, pause and choose “Note at this moment”, or click a shot on the right and type in its box.', 'Mark shots Keep, Fix or Cut if that is quicker than words.', 'To suggest different footage, open Library, find the moment and pin it to the shot.', 'When you have said everything, choose Run notes in the header.', 'Watch the new version when it arrives, and repeat.'],
+    keys: [['space', 'play or pause'], ['← →', 'one frame back or forward'], ['↑ ↓', 'previous or next shot'], ['1 2 3', 'keep, fix, cut'], ['L', 'loop this shot'], ['N', 'note at this moment'], ['Esc', 'leave a text box'], ['?', 'open or close this help']],
+    when: [['Run notes', 'starts your own coding agent on this computer. It reads your notes, changes the cut, checks its work, renders and publishes the next version. It is billed to your agent account and can take several minutes; you can cancel it.'], ['Publish', 'renders the cut as it is saved right now and adds it as the next version. No agent, no cost; only shots that changed are rendered again.'], ['Make this a rule', 'copies a note into Rules, so it applies to every future Run and not just this version.'], ['Typing a note', 'saves it straight away. Nothing else changes until you Run or Publish.']] },
+  library: { title: 'Library',
+    what: 'Every clip in your footage folders. The bar under each clip shows which seconds are already in a cut, so you can find fresh material and avoid repeating yourself.',
+    how: ['Move the pointer across a clip to scrub through it.', 'Click a clip to open it in the player at that moment.', 'Use All / Unused / Used and the filter box to narrow things down.', 'To offer a clip for a shot: select the shot on the right, find the moment in the player, and choose Pin.', 'Add more footage with Add folder…, or drop files anywhere on the page.'],
+    keys: [['space', 'play or pause the open clip'], ['← →', 'one frame'], ['↑ ↓', 'choose the shot to pin to'], ['P', 'pin at this moment'], ['Esc', 'close the clip']],
+    when: [['Add folder…', 'links a folder where it is. Nothing is copied or moved.'], ['Dropping files', 'copies them into the project (footage/inbox). The originals are left alone.'], ['Pin', 'adds the clip and moment to that shot’s note. The agent uses it on the next Run; nothing in the cut changes yet.'], ['Removing a folder', 'only takes it off the list. No files are deleted.']] },
+  rules: { title: 'Rules',
+    what: 'Standing preferences for this project — the things you would otherwise repeat in every note. The ones switched on are given to the agent with every Run.',
+    how: ['Tick any suggestion that matches how you like to work. All of them start off.', 'Where a suggestion has a number or a choice in it, edit that part.', 'Type a rule of your own in the box at the top and press Enter.', 'In Review, “Make this a rule” under a note turns it into a rule you can reword here.', 'Use “Save as my defaults” to start future projects from this set.'],
+    keys: [['Enter', 'add the rule you typed'], ['Esc', 'leave a text box']],
+    when: [['Switching a rule on', 'applies from the next Run. It does not change the cut by itself.'], ['“Checked automatically”', 'means the tool itself refuses to publish while that rule is broken. Every other rule is an instruction to the agent.'], ['Save as my defaults', 'stores this set on this computer for new projects. Existing projects are not touched.'], ['No rules on', 'is fine. The agent then follows only your notes.']] },
+  live: { title: 'Live',
+    what: 'Play the cut straight away, with no rendering, and adjust it by hand. Framing and timing are exact; colour and effects are a close approximation.',
+    how: ['Press play, or click along the bar to move through the cut.', 'Click a panel in the picture, or in the list on the right, to select it.', 'Drag the crop box to choose which part of the clip the panel shows.', 'Drag the in-point bar to choose which moment of the clip it starts from.', 'Change grade, exposure or speed, or use Swap clip… to put different footage in the panel.', 'Save when you like it, then Publish to get a version you can review.'],
+    keys: [['space', 'play or pause'], ['← →', 'one frame (with shift: one second)'], ['↑ ↓', 'previous or next shot'], ['L', 'loop this shot'], ['⌘Z / ⇧⌘Z', 'undo, redo'], ['⌘S', 'save'], ['Esc', 'clear the selection']],
+    when: [['Save', 'writes your changes into the cut on disk. A copy of the cut as it was is kept, and “Undo last save” puts it back.'], ['Publish', 'renders the saved cut and adds it to Review as the next version. With unsaved changes the button reads “Save and publish”.'], ['Leaving the tab', 'keeps your unsaved changes; a dot on the Live tab reminds you. Closing the page asks first.'], ['Revert', 'throws away everything since the last save.']] },
+  new: { title: 'New cut',
+    what: 'Start a cut from scratch: pick a song, the footage it may use, and describe what you want. Your agent builds a first version for you to review.',
+    how: ['Give the cut a short id and a title. (Or reopen a brief you saved earlier.)', 'Choose a song, or upload one. Drag on the strip to use only part of it.', 'Choose the footage it may draw on: whole folders or single clips.', 'Write the brief in your own words: what it is about, how it should feel, what must or must not appear. A shot-by-shot outline is optional.', 'Under Structure, say what cuts should land on (beats, lyric lines, sections or anywhere) and roughly how many shots.', 'Read “Before you build”, then choose Build first cut. Progress shows in the header.', 'When it finishes, the first version opens in Review.'],
+    keys: [],
+    when: [['Build first cut', 'starts your own coding agent, like Run notes. It is billed to your agent account and can take a while; you can cancel it.'], ['Save brief', 'keeps what you have filled in so you can come back to it. Nothing is built.'], ['Find lyric lines', 'listens to the song on this computer to find where each line starts. It is optional and slow.'], ['Uploading a song', 'copies it into the project.'], ['An existing cut', 'is never overwritten. A new cut always gets its own id.'], ['Your rules', 'that are switched on are given to the agent for the new cut too.']] },
+};
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+let helpOpen = store.get('cutvelvet.help') === '1';
+function paintHelp() {
+  const box = $('#help'), h = HELP[tab] || HELP.review; if (!box) return;
+  $('.shell').classList.toggle('helpopen', helpOpen); box.hidden = !helpOpen; $('#helpBtn').classList.toggle('on', helpOpen); $('#helpBtn').setAttribute('aria-expanded', helpOpen);
+  if (!helpOpen || box.dataset.tab === tab + (h.rev || '')) return; box.dataset.tab = tab + (h.rev || '');
+  box.innerHTML = `<button class="x" id="helpX" aria-label="Close help">×</button><h2>${esc(h.title)}</h2><p>${esc(h.what)}</p>`
+    + `<h3>How to</h3><ol>${(h.how || []).map(x => `<li>${esc(x)}</li>`).join('')}</ol>`
+    + ((h.keys || []).length ? `<h3>Keyboard</h3><dl>${h.keys.map(([k, d]) => `<dt>${esc(k)}</dt><dd>${esc(d)}</dd>`).join('')}</dl>` : '')
+    + `<h3>What happens when…</h3><ul>${(h.when || []).map(([k, d]) => `<li><b>${esc(k)}</b> ${esc(d)}</li>`).join('')}</ul>`
+    + `<h3>The loop</h3><div class="loop">${HELP.loop.map(x => `<b>${esc(x)}</b>`).join(' → ')}</div>`;
+  box.scrollTop = 0; $('#helpX').addEventListener('click', () => setHelp(false));
+}
+function setHelp(on) { helpOpen = on; store.set('cutvelvet.help', on ? '1' : '0'); if (on) dismissHint(); paintHelp(); }
+$('#helpBtn').addEventListener('click', e => { e.stopPropagation(); setHelp(!helpOpen); });
+document.addEventListener('keydown', e => { if (typing()) return; if (e.key === 'Escape' && helpOpen && $('#perf').hidden) setHelp(false); else if (e.key === '?' && !e.metaKey && !e.ctrlKey) setHelp(!helpOpen); });
+window.addEventListener('message', e => {   // an embedded page describing itself
+  const d = e.data && e.data.cutvelvetHelp; if (e.origin !== location.origin || !d || !HELP[d.tab] || typeof d.help !== 'object') return;
+  HELP[d.tab] = Object.assign({}, HELP[d.tab], d.help, { rev: (HELP[d.tab].rev || 0) + 1 }); paintHelp();
+});
+// first visit: one quiet pointer at the "?" — never shown again once dismissed or once help has been opened
+function dismissHint() { $('#hint1').hidden = true; store.set('cutvelvet.hinted', '1'); }
+if (!store.get('cutvelvet.hinted') && !helpOpen) $('#hint1').hidden = false;
+$('#hint1x').addEventListener('click', dismissHint);
+/* ------------------------------------------------------------------ get started (a project with no version yet) */
+// The steps are read from the project as it is -- library, music folder, agent, cuts -- and tick themselves off. Nothing is
+// stored: once the project has a version the Review tab shows that instead and this never appears again.
+let startOn = false, startInfo = null, startTimer = 0, startSig = '';
+async function refreshStart() {
+  clearTimeout(startTimer); if (!startOn) return;
+  const lim = () => ({ signal: AbortSignal.timeout(8000) });
+  const [nw, ag, vs] = await Promise.all([fetch('/api/new', lim()).then(r => r.json()).catch(() => null), fetch('/api/agent', lim()).then(r => r.json()).catch(() => null), fetch('/versions', lim()).then(r => r.json()).catch(() => [])]);
+  if (Array.isArray(vs) && vs.length) { location.reload(); return; }          // a first version exists: show it
+  startInfo = { songs: nw && Array.isArray(nw.songs) ? nw.songs.length : null, music: nw && nw.project ? nw.project.music : 'music', agent: ag };
+  // Files put into the footage folder by hand while the page is open: look again, but only while the library is still empty.
+  if (lib.project && !(lib.clips || []).length && !(lib.status || {}).scanning) { try { await fetch('/api/library/rescan', { method: 'POST', signal: AbortSignal.timeout(8000) }); } catch (e) {} loadLibrary(); }
+  paintStart(); startTimer = setTimeout(refreshStart, document.hidden || tab !== 'review' ? 15000 : 5000);
+}
+function paintStart() {
+  if (!startOn) return;
+  const clips = (lib.clips || []).length, scan = lib.status || {}, libKnown = !!lib.project, ag = startInfo && startInfo.agent, eff = ag && ag.effective, songs = startInfo ? startInfo.songs : null;
+  const names = ag ? ag.known.filter(k => k.id !== 'custom').map(k => k.name) : [], pending = !!(ag && ag.project && ag.project.pending);
+  const agentOk = !!(eff && eff.found && !pending), cut = timelines[0];
+  const steps = [];
+  steps.push({ id: 'footage', done: clips > 0, title: 'Add footage',
+    st: !libKnown ? 'Checking…' : scan.scanning && scan.total ? `Indexing… ${scan.done} of ${scan.total}` : clips ? `${clips} clip${clips > 1 ? 's' : ''} in the library` : 'No clips yet',
+    ds: clips ? 'Add more whenever you like: link a folder, or drop files on the page.' : 'Link a folder of video where it is, or drop video files onto this page to copy them into the project. Everything is cut from this footage.',
+    ac: [['footage', clips ? 'Open Library' : 'Add footage']] });
+  steps.push({ id: 'song', done: songs > 0, optional: true, title: 'Add a song',
+    st: songs === null ? 'Checking…' : songs ? `${songs} audio file${songs > 1 ? 's' : ''} in ${startInfo.music}/` : 'None yet — a cut can also be silent',
+    ds: songs ? 'You choose which one when you make the cut.' : `Put an audio file in the project’s ${startInfo ? startInfo.music : 'music'}/ folder, or add one in New cut. Cuts can then land on its beats.`, ac: [] });
+  steps.push({ id: 'agent', done: agentOk, title: 'Choose your agent', warn: !!ag && !agentOk,
+    st: !ag ? 'Checking…' : pending ? 'This project asks to use its own agent command — decide whether to allow it' : agentOk ? `${eff.name || 'Your command'} will be used` + (eff.source === 'auto' ? ' (found on this computer)' : '') : eff && eff.command ? `${eff.name || 'The chosen agent'} is not installed on this computer` : 'No agent found on this computer',
+    ds: agentOk ? 'Change it, or set a model, in Settings. cutvelvet never sees a key or a login; your agent’s provider bills you.' : `cutvelvet does not include an AI. It starts a command-line coding agent that you install and sign in to yourself${names.length ? ' — it knows ' + names.join(', ') + ', or you can set any other command' : ''}.`,
+    ac: [['agent', agentOk ? 'Settings' : 'Set up agent']] });
+  if (cut) steps.push({ id: 'publish', done: false, title: 'Publish the cut', st: `This project already has a cut (${timelines.map(t => t.id).join(', ')}) but no version to watch yet`,
+    ds: 'Publishing renders the cut and adds it here as a version you can watch and write notes on. No agent is involved. Open Live first if you want to look at it or adjust it.', ac: [['publish', 'Publish ' + cut.id], ['live', 'Open Live']] });
+  else steps.push({ id: 'cut', done: false, title: 'Make the first cut', blocked: !clips ? 'Add footage first (step 1).' : '',
+    st: !clips ? 'Waiting for footage' : agentOk ? 'Ready' : 'You can fill in the brief now; building it needs an agent (step 3)', warn: !!clips && !agentOk,
+    ds: 'In New cut you choose the song and footage and describe what you want in a few lines. Your agent builds a first version.', ac: [['new', '+ New cut']] });
+  steps.push({ id: 'loop', done: false, info: true, title: 'Watch, write notes, press Run notes', st: '', ds: 'The first version opens here. Note what should change on each shot and press Run notes: your agent revises the cut and publishes the next version. Repeat until it is right.', ac: [] });
+  const next = steps.find(x => !x.done && !x.optional && !x.info);
+  const html = steps.map((x, n) => `<li class="${x.done ? 'done' : ''}${x === next ? ' next' : ''}" data-step="${x.id}"><span class="mk" aria-hidden="true">${x.done ? '✓' : n + 1}</span>
+      <div class="bd"><b>${esc(x.title)}${x.optional ? '<small>optional</small>' : ''}${x.done ? '<span class="sr"> — done</span>' : ''}</b>${x.st ? `<span class="st${x.warn ? ' warn' : ''}">${esc(x.st)}</span>` : ''}<span class="ds">${esc(x.blocked || x.ds)}</span></div>
+      <div class="ac">${x.ac.map(([k, label]) => `<button data-go="${k}"${x.blocked ? ` aria-disabled="true" data-tip="${esc(x.blocked)}"` : ''}>${esc(label)}</button>`).join('')}</div></li>`).join('');
+  if (html !== startSig) { startSig = html; $('#steps').innerHTML = html; }
+}
+$('#steps').addEventListener('click', e => {
+  const b = e.target.closest('button[data-go]'); if (!b || b.getAttribute('aria-disabled') === 'true') return; const go = b.dataset.go;
+  if (go === 'footage') { setTab('library'); $('#libPane').scrollTop = 0; $('#fpick').focus(); }
+  else if (go === 'agent') { e.stopPropagation(); openSettings('agent'); }
+  else if (go === 'new' || go === 'live') setTab(go);
+  else if (go === 'publish') { e.stopPropagation(); $('#pub').click(); }
+});
+function showStart() {
+  startOn = true; $('#app').classList.add('noversions'); $('#emptyReview').hidden = false; for (const n of [...$('#reviewPane').children]) if (n.id !== 'emptyReview') n.hidden = true;
+  $('#hint1').hidden = true;      // the checklist is the welcome here; the "?" pointer is one line inside it
+  paintStart(); refreshStart();
+}
+paintHelp();
+
+(async () => {
+  loadLibrary(); loadRules(); pollSys();
+  const vs = await (await fetch('/versions')).json();
+  $('#ver').addEventListener('change', () => { if ($('#ver').value === NEW) { fillVer(verList(), ver); setTab('new'); } else { load($('#ver').value); if (tab === 'new') setTab('review'); } });
+  if (!vs.length) { fillVer([]); setSaved(''); showStart(); syncPinTarget(); pollRun(); tick(); }
+  else { fillVer(vs); await load(vs[vs.length - 1]); tick(); }
+  if (TABS.includes(location.hash.slice(1))) setTab(location.hash.slice(1), true);   // after the first load, so Live opens on the right timeline
+})();
+</script>
+</body>
+</html>

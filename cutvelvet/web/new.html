@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cutvelvet — New cut</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0c0d'/%3E%3Crect x='5' y='8' width='22' height='5' fill='%23ece7dc'/%3E%3Crect x='5' y='15' width='13' height='4' fill='%23ece7dc'/%3E%3Crect x='20' y='15' width='7' height='4' fill='%238d8a84'/%3E%3Crect x='5' y='21' width='22' height='3' fill='%238d8a84'/%3E%3C/svg%3E">
+<style>
+  :root { --bg:#0c0c0d; --panel:#151517; --line:#28282c; --ink:#ece7dc; --dim:#8d8a84; --keep:#5fbf8a; --fix:#e0a63a; --cut:#e0604f; }
+  * { box-sizing: border-box; }
+  [hidden] { display:none !important; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font: 14px/1.45 "Satoshi", -apple-system, "Helvetica Neue", sans-serif; }
+  body { display:flex; flex-direction:column; }
+  .scroll { flex:1; min-height:0; overflow:auto; scrollbar-gutter:stable; }
+  .col { max-width:760px; margin:0 auto; padding:0 24px; }
+  .scroll .col { padding-top:16px; padding-bottom:16px; display:flex; flex-direction:column; gap:22px; }
+  /* head: title, step rail, close */
+  .head { display:flex; align-items:center; gap:16px; }
+  h1 { font: 400 26px/1 Didot, "Bodoni 72", serif; margin:0; letter-spacing:.01em; white-space:nowrap; }
+  .rail { display:flex; gap:4px; align-items:center; flex:1; min-width:0; color:var(--dim); font-size:13px; flex-wrap:wrap; }
+  .rail a { color:var(--dim); text-decoration:none; padding:3px 8px; border-radius:6px; white-space:nowrap; }
+  .rail a:hover { color:var(--ink); background:var(--panel); }
+  .rail a b { font-weight:400; display:inline-grid; place-items:center; width:18px; height:18px; border:1px solid var(--line); border-radius:50%; font-size:11px; margin-right:6px; }
+  .rail a.ok { color:var(--ink); } .rail a.ok b { background:var(--keep); border-color:var(--keep); color:#08130c; }
+  .rail i { width:14px; height:1px; background:var(--line); }
+  #close { width:32px; height:32px; padding:0; font-size:20px; line-height:1; border-radius:50%; flex:none; }
+  /* steps */
+  .step { display:grid; grid-template-columns:30px minmax(0, 1fr); column-gap:12px; scroll-margin-top:12px; }
+  .step > .n { grid-row:1 / span 9; width:26px; height:26px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; font-size:13px; color:var(--dim); margin-top:1px; }
+  .step.ok > .n { background:var(--keep); border-color:var(--keep); color:#08130c; }
+  .step > * { grid-column:2; min-width:0; }
+  .step > .n { grid-column:1; }
+  h2 { font: 400 20px/1.3 Didot, "Bodoni 72", serif; margin:0; display:flex; align-items:baseline; gap:12px; }
+  h2 small { font: 13px/1.3 "Satoshi", -apple-system, sans-serif; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .help { color:var(--dim); font-size:13px; margin:1px 0 10px; }
+  .ctl { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+  .grow { flex:1; min-width:160px; }
+  label { display:block; color:var(--dim); font-size:12px; margin:0 0 4px; }
+  button, select, input, textarea { font:inherit; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+  button { padding:7px 12px; cursor:pointer; }
+  button:hover { border-color:#4a4a50; }
+  button:disabled { opacity:.45; cursor:default; }
+  button.on { background:var(--ink); color:#111; border-color:var(--ink); }
+  button.primary { background:var(--ink); color:#111; border-color:var(--ink); font-weight:600; padding:9px 18px; }
+  button.primary:disabled { background:var(--panel); color:var(--ink); border-color:var(--line); font-weight:400; }
+  button.lnk, a { padding:0; border:0; background:none; color:var(--ink); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  button.lnk.q, a.q { color:var(--dim); font-size:13px; }
+  select { padding:7px 8px; max-width:100%; }
+  input[type=text], textarea { width:100%; padding:8px 10px; }
+  input[type=number] { width:84px; padding:6px 8px; font: 12px ui-monospace, Menlo, monospace; }
+  textarea { resize:vertical; min-height:92px; font-size:15px; line-height:1.5; }
+  input:focus, textarea:focus, button:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible { outline:1px solid var(--ink); outline-offset:1px; }
+  input[type=checkbox], input[type=radio] { accent-color: var(--ink); margin:0 6px 0 0; }
+  .hint { color:var(--dim); font-size:12px; }
+  .err { color:var(--cut); } .warn { color:var(--fix); }
+  .mono { font: 12px ui-monospace, Menlo, monospace; }
+  .chk { display:inline-flex; align-items:center; color:var(--ink); font-size:13px; margin:0; cursor:pointer; }
+  details > summary { cursor:pointer; color:var(--dim); font-size:13px; list-style:none; display:inline-block; }
+  details > summary::-webkit-details-marker { display:none; }
+  details > summary::before { content:'+'; display:inline-block; width:14px; }
+  details[open] > summary::before { content:'–'; }
+  details > summary:hover { color:var(--ink); }
+  .inner { margin-top:10px; padding:14px; border:1px solid var(--line); border-radius:8px; display:flex; flex-direction:column; gap:14px; }
+  /* the song strip */
+  #strip { position:relative; height:108px; background:var(--panel); border-radius:4px; overflow:hidden; cursor:crosshair; touch-action:none; margin-top:10px; }
+  #strip canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #strip .msg { position:absolute; inset:0; display:grid; place-items:center; color:var(--dim); font-size:12px; pointer-events:none; }
+  #tip { position:absolute; top:4px; right:6px; background:#000b; padding:1px 6px; border-radius:3px; pointer-events:none; }
+  .under { display:flex; gap:12px; align-items:center; margin:8px 0 8px; min-height:30px; }
+  .under #using { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .legend { display:flex; gap:12px; color:var(--dim); font-size:11px; white-space:nowrap; }
+  .legend i { display:inline-block; width:2px; height:10px; margin-right:5px; vertical-align:-1px; background:#fff; } .legend i.s { background:var(--fix); }
+  ul.plain { margin:0; padding-left:18px; } ul.plain li { margin:3px 0; }
+  /* footage */
+  .fold { display:inline-flex; align-items:center; margin:0; color:var(--ink); font: 12px ui-monospace, Menlo, monospace; border:1px solid var(--line); border-radius:6px; padding:5px 10px; cursor:pointer; }
+  .fold small { color:var(--dim); font-size:11px; margin-left:6px; }
+  .clips { display:grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap:8px; max-height:340px; overflow:auto; }
+  .clip { position:relative; aspect-ratio:16/9; background:#000 center/contain no-repeat; border-radius:3px; cursor:pointer; border:0; padding:0; }
+  .clip.off { opacity:.22; }
+  .clip span { position:absolute; left:3px; bottom:3px; font: 10px ui-monospace, Menlo, monospace; background:#000b; padding:0 4px; border-radius:2px; max-width:calc(100% - 6px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .eg { display:flex; flex-direction:column; gap:2px; margin:8px 0 8px; }
+  .eg button { text-align:left; border:0; background:none; padding:2px 0; color:#6b6964; font-size:13px; }
+  .eg button:hover { color:var(--ink); }
+  .eg button::before { content:'+ '; }
+  .seg { display:inline-flex; } h2 .seg { font: 13px/1.3 "Satoshi", -apple-system, sans-serif; align-self:center; } h2 .seg button { padding:5px 11px; } .seg button { border-radius:0; margin-left:-1px; } .seg button:first-child { border-radius:6px 0 0 6px; margin-left:0; } .seg button:last-child { border-radius:0 6px 6px 0; }
+  .rule { padding:2px 0; font-size:13px; } .rule small { color:var(--dim); }
+  /* job */
+  .job { border:1px solid var(--line); border-radius:8px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+  .chip { display:inline-flex; align-items:center; gap:8px; }
+  .chip i { width:8px; height:8px; border-radius:50%; background:var(--fix); flex:none; }
+  .chip.running i { animation: pulse 1.2s ease-in-out infinite; } .chip.done i { background:var(--keep); } .chip.failed i, .chip.cancelled i { background:var(--cut); }
+  @keyframes pulse { 50% { opacity:.25; } }
+  @media (prefers-reduced-motion: reduce) { .chip.running i { animation:none; } }
+  pre { margin:0; font: 11px/1.5 ui-monospace, Menlo, monospace; white-space:pre-wrap; word-break:break-word; color:var(--dim); max-height:220px; overflow:auto; }
+  pre.md { color:var(--ink); font-size:12px; }
+  /* action bar */
+  .bar { flex:none; border-top:1px solid var(--line); background:var(--bg); }
+  .bar .col { display:flex; align-items:center; gap:12px; padding-top:12px; padding-bottom:12px; }
+  #sum { flex:1; min-width:0; }
+  #sum a { color:var(--fix); }
+  dialog { background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:20px; width:min(560px, calc(100vw - 32px)); }
+  dialog.wide { width:min(900px, calc(100vw - 32px)); }
+  dialog::backdrop { background:#000a; }
+  dialog h3 { font: 400 20px/1.2 Didot, "Bodoni 72", serif; margin:0 0 10px; }
+  dialog p { margin:0 0 10px; }
+  dialog pre { max-height:66vh; color:var(--ink); }
+  @media (max-width: 700px) { .rail { display:none; } .head { justify-content:space-between; } .bar .col { flex-wrap:wrap; } #sum { flex-basis:100%; } .legend { display:none; } }
+  /* dropdowns: our own caret, inset from the edge */
+  select:not([multiple]) { -webkit-appearance:none; appearance:none; padding-right:32px !important; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ece7dc' stroke-opacity='.75' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:10px 6px; }
+</style>
+</head>
+<body>
+<div class="scroll" id="scroll">
+<div class="col">
+  <div class="head">
+    <h1>New cut</h1>
+    <nav class="rail" aria-label="Steps"><a href="#s1" id="r1"><b>1</b>Sound</a><i></i><a href="#s2" id="r2"><b>2</b>Footage</a><i></i><a href="#s3" id="r3"><b>3</b>What it’s about</a></nav>
+    <button class="lnk q" id="over" hidden>Start over</button>
+    <button id="close" aria-label="Close New cut" title="Close (Esc). Your draft is kept.">×</button>
+  </div>
+
+  <div class="job" id="jobBox" hidden>
+    <div class="ctl"><span class="chip" id="jobChip"><i></i><span id="jobText"></span></span><span style="flex:1"></span><button id="cancel" hidden>Cancel</button></div>
+    <div id="jobDone" hidden></div>
+    <details id="logBox"><summary>Show the agent’s log</summary><pre id="tail" style="margin-top:8px"></pre></details>
+    <pre class="md" id="changes" hidden></pre>
+  </div>
+
+  <section class="step" id="s1">
+    <div class="n">1</div>
+    <h2>Sound <span style="flex:1"></span><span class="seg" id="sound" role="radiogroup" aria-label="What the cut is set to"><button data-v="song" role="radio">A song</button><button data-v="audio" role="radio">Other audio</button><button data-v="none" role="radio">No sound</button></span></h2>
+    <div class="help" id="soundHelp"></div>
+    <div class="ctl" id="silentBox" hidden>
+      <label for="howlong" style="margin:0;color:var(--ink);font-size:14px">How long?</label><input type="number" id="howlong" min="5" max="1800" step="1" value="30"><span class="hint">seconds</span>
+      <span class="seg" id="quick" style="margin-left:8px"><button data-v="15">15</button><button data-v="30">30</button><button data-v="60">60</button><button data-v="90">90</button></span>
+    </div>
+    <div class="ctl" id="songRow">
+      <select id="song" aria-label="Song or other audio"></select>
+      <button id="pick">Add a song…</button>
+      <input type="file" id="file" accept="audio/*,.wav,.mp3,.m4a,.aac,.flac,.aif,.aiff,.ogg,.opus" hidden><button class="lnk q" id="upload" type="button">or upload</button>
+      <span class="hint" id="songMsg"></span>
+    </div>
+    <div id="strip" aria-label="The song. Drag to choose the part the cut uses; click to listen from there.">
+      <canvas id="cv"></canvas><div class="msg" id="stripMsg">Choose a song to see what the cut can snap to.</div><div class="mono" id="tip" hidden></div>
+    </div>
+    <div class="under" id="under"><span id="using" class="hint"></span><span class="legend"><span><i></i>cuts, first guess</span><span><i class="s"></i>changes in the sound</span></span><button id="play">Play this part</button></div>
+    <details id="songDetails"><summary>Details</summary><div class="inner">
+      <div class="row">
+        <div><label for="offset">Start at (seconds)</label><input type="number" id="offset" min="0" step="0.1" value="0"></div>
+        <div><label for="length">Length (seconds)</label><input type="number" id="length" min="5" step="0.1" placeholder="all"></div>
+        <div><label for="fadeout">Fade out (seconds)</label><input type="number" id="fadeout" min="0" max="60" step="0.5" value="4"></div>
+        <div class="ctl"><button id="whole">Whole song</button><button id="suggest">Suggest a part</button></div>
+      </div>
+      <div><label class="chk"><input type="checkbox" id="lyrics">Find lyric lines</label><div class="hint" id="lyricsMsg" style="margin-top:4px"></div></div>
+      <div id="anNotes" class="hint"></div>
+    </div></details>
+    <audio id="au" preload="none"></audio>
+  </section>
+
+  <section class="step" id="s2">
+    <div class="n">2</div>
+    <h2>Footage</h2>
+    <div class="help" style="margin-bottom:6px"><span id="footLine"></span> <button class="lnk q" id="footToggle" aria-expanded="false">Choose…</button></div>
+    <div class="inner" id="footBox" hidden style="margin-top:4px">
+      <div class="ctl" id="folders"></div>
+      <div class="hint">Click a clip to leave it out.</div>
+      <div class="clips" id="clips"></div>
+    </div>
+  </section>
+
+  <section class="step" id="s3">
+    <div class="n">3</div>
+    <h2>What it’s about <small id="sum3"></small></h2>
+    <div class="help">In your own words: what it is, how it should feel, anything that must or must not appear.</div>
+    <textarea id="intent" aria-label="What this cut is about" placeholder="A few lines are enough. The agent has only this, your rules and the footage to go on."></textarea>
+    <div class="eg" id="eg" aria-label="Starting points">
+      <button data-t="A slow, quiet piece about waiting. Faces and hands, long holds, nothing hurried.">A slow, quiet piece about waiting. Faces and hands, long holds, nothing hurried.</button>
+      <button data-t="Fast and bright: movement on every beat, lots of colour, no shot longer than two seconds.">Fast and bright: movement on every beat, lots of colour, no shot longer than two seconds.</button>
+      <button data-t="Start wide and empty, end close on one person. It should feel like getting nearer to someone.">Start wide and empty, end close on one person. It should feel like getting nearer to someone.</button>
+    </div>
+    <details id="outlineBox"><summary>Add a shot-by-shot outline (optional)</summary>
+      <textarea id="outline" style="margin-top:8px;font-size:14px" aria-label="Shot-by-shot outline" placeholder="One line per shot or passage, in order. As loose or as exact as you like."></textarea></details>
+  </section>
+
+  <details id="options" style="margin-left:42px"><summary>Options <span id="optSum"></span></summary><div class="inner">
+    <div class="row">
+      <div><label for="id">Short id</label><input type="text" id="id" class="mono" style="width:120px" maxlength="40" spellcheck="false" autocomplete="off"></div>
+      <div class="grow"><label for="title">Name of the cut</label><input type="text" id="title" autocomplete="off"></div>
+    </div>
+    <div class="hint" style="margin-top:-8px">The id names the files (<span class="mono">timelines/<span id="idEcho">…</span>.json</span>): letters and digits. An existing cut is never overwritten.</div>
+    <div class="row">
+      <div><label>Cuts land on</label>
+        <div class="seg" id="snap" role="radiogroup"><button data-v="beats" role="radio">Beats</button><button data-v="lines" role="radio">Lyric lines</button><button data-v="sections" role="radio">Sections</button><button data-v="free" role="radio">Anywhere</button></div></div>
+      <div><label>How many shots</label>
+        <div class="ctl"><label class="chk"><input type="radio" name="mode" id="modeAvg" checked>about</label><input type="number" id="avg" min="0.3" max="120" step="0.5" value="5" aria-label="Seconds per shot"><span class="hint">s each</span>
+          <label class="chk" style="margin-left:8px"><input type="radio" name="mode" id="modeCount">about</label><input type="number" id="count" min="1" max="2000" step="1" placeholder="—" aria-label="Number of shots"><span class="hint">shots</span></div></div>
+    </div>
+    <div class="hint" id="structMsg" style="margin-top:-8px"></div>
+    <div><span id="rulesLine"></span> <button class="lnk q" id="rulesToggle" aria-expanded="false">View</button> · <a class="q" href="/#rules" target="_top">Edit in the Rules tab</a>
+      <div id="rules" hidden style="margin-top:8px"></div></div>
+    <div class="ctl"><span id="briefsBox" hidden><label for="briefs" style="display:inline;margin-right:6px">Reopen a saved brief</label><select id="briefs"></select></span><span style="flex:1"></span><button class="lnk q" id="showPrompt">Show the prompt</button></div>
+  </div></details>
+</div>
+</div>
+
+<div class="bar"><div class="col">
+  <div id="sum" aria-live="polite"></div>
+  <button id="save">Save for later</button>
+  <button class="primary" id="build" disabled>Build first cut</button>
+</div></div>
+
+<dialog id="confirm">
+  <h3 id="cTitle">Build the first cut?</h3>
+  <p id="cLine"></p>
+  <details id="cMore"><summary>What will happen</summary><div id="est" style="margin-top:8px"></div></details>
+  <div id="ownBox" hidden style="margin-top:12px"><label class="chk" style="align-items:flex-start"><input type="checkbox" id="ownOk" style="margin-top:3px"><span id="ownSay"></span></label>
+    <details style="margin-top:6px"><summary>Read them (.cutvelvet/newcut_prompt.md)</summary><pre id="ownPre" style="margin-top:8px;max-height:200px"></pre></details></div>
+  <div class="ctl" style="margin-top:16px;justify-content:flex-end"><button id="cCancel">Not now</button><button class="primary" id="cGo">Build first cut</button></div>
+</dialog>
+<dialog id="dlg" class="wide"><div class="ctl" style="margin-bottom:10px"><b>The prompt the agent will get</b><span style="flex:1"></span><button id="dlgClose">Close</button></div><pre id="dlgPre"></pre>
+  <div class="hint" style="margin-top:8px">To change the wording for this project, save your own version as <span class="mono">.cutvelvet/newcut_prompt.md</span> in the project folder.</div></dialog>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const api = async (path, body) => {
+  const r = await fetch(path, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return r.json().catch(() => ({ ok: false, error: 'the server answered ' + r.status }));
+};
+const mmss = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const dur = s => { s = Math.round(s); return s >= 90 ? Math.floor(s / 60) + ' min' + (s % 60 ? ' ' + (s % 60) + ' s' : '') : s + ' s'; };
+const num = (el, d) => { const v = parseFloat(el.value); return Number.isFinite(v) ? v : d; };
+const tell = m => { try { if (parent !== window) parent.postMessage(m, location.origin); } catch (e) {} };
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+let S = null;                 // GET /api/new
+let an = null, env = null;    // analysis + display envelope of the chosen song
+let est = null;               // last estimate
+let folders = null, exclude = new Set(), snap = 'beats', playT = null, job = null, started = false, sawRun = false, anTimer = null, estTimer = null, runTimer = null;
+let auto = { id: true, title: true, snap: true }, winFor = null, draftKey = null, missing = null, sound = 'song';   // sound: song | audio | none
+
+const songInfo = () => (S ? S.songs : []).find(x => x.src === $('#song').value);
+const songDur = () => (an && an.duration) || (songInfo() || {}).duration || 0;
+const win = () => { const d = songDur(), off = Math.min(Math.max(0, num($('#offset'), 0)), d), len = Math.min(num($('#length'), d - off) || d - off, d - off); return { off, len: Math.max(0, len), d }; };
+
+function brief() {
+  const silent = sound === 'none';
+  return { id: $('#id').value.trim(), title: $('#title').value, sound, song: silent ? '' : $('#song').value, offset: silent ? 0 : num($('#offset'), 0), length: silent ? num($('#howlong'), 30) : num($('#length'), null), fadeout: num($('#fadeout'), 4),
+    footage: { folders: folders, exclude: [...exclude] }, intent: $('#intent').value, outline: $('#outline').value,
+    structure: { snap: silent ? 'free' : snap, avg_shot: num($('#avg'), 5), shots: $('#modeCount').checked ? num($('#count'), null) : null }, lyrics: !silent && $('#lyrics').checked };
+}
+function fill(b) {
+  $('#id').value = b.id || ''; $('#title').value = b.title || ''; $('#intent').value = b.intent || ''; $('#outline').value = b.outline || '';
+  $('#outlineBox').open = !!b.outline;
+  sound = ['song', 'audio', 'none'].includes(b.sound) ? b.sound : 'song';
+  if (sound === 'none') $('#howlong').value = b.length || 30; else { $('#offset').value = b.offset || 0; $('#length').value = b.length || ''; }
+  $('#fadeout').value = b.fadeout ?? 4;
+  const st = b.structure || {}; snap = st.snap || 'beats'; $('#avg').value = st.avg_shot || 5; $('#count').value = st.shots || '';
+  $('#modeCount').checked = !!st.shots; $('#modeAvg').checked = !st.shots;
+  folders = (b.footage || {}).folders || null; exclude = new Set((b.footage || {}).exclude || []);
+  $('#lyrics').checked = !!b.lyrics && S.whisper.available;
+  if (b.song && S.songs.some(x => x.src === b.song && x.duration)) $('#song').value = b.song;
+  paintSound(); paintSnap(); paintFootage();
+}
+
+/* ---------------------------------------------------------------- draft: nothing typed here is lost by closing */
+// The project's own "cuts land on … boundaries" rule decides the default, and the sentence in the bar says so.
+const ruleSnap = () => (sound === 'song' && S && S.cut_rule && S.cut_rule.snap) || null;
+function defaultSnap() { return sound === 'none' ? 'free' : ruleSnap() || (sound === 'audio' ? 'sections' : 'beats'); }
+function cutWords() {
+  const r = S && S.cut_rule, shown = est && est.snap || snap;
+  if (sound === 'none') return 'no sound';
+  if (r && sound === 'song' && (!r.snap || r.snap === snap)) return `cut on ${esc(r.unit)} boundaries (your rule)` + (r.snap && shown !== r.snap ? `, here on ${SNAPS[shown]}` : '');
+  return 'cut ' + (shown === 'free' ? 'freely' : 'on ' + SNAPS[shown]);
+}
+function saveDraft() { if (draftKey) store.set(draftKey, Object.assign(brief(), { auto, winFor, at: Date.now() })); }
+function dirty() { const b = brief(); return !!(b.intent || b.outline || !auto.id || !auto.title || b.footage.folders || b.footage.exclude.length); }
+$('#over').addEventListener('click', () => { store.set(draftKey, null); draftKey = null; location.reload(); });
+
+/* ---------------------------------------------------------------- names: filled in for you until you type your own */
+const cleanTitle = name => name.replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]+/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b[a-z]/g, c => c.toUpperCase());
+function freeId(base) { const taken = new Set([...S.timelines, ...(S.takenIds || [])]); if (!taken.has(base)) return base; for (let n = 2; n < 200; n++) if (!taken.has(base + n)) return base + n; return base; }
+function autoNames() {
+  const s = songInfo();
+  if (auto.title) $('#title').value = sound === 'none' ? 'Silent cut' : s ? cleanTitle(s.name) : '';
+  if (auto.id) $('#id').value = freeId(S.suggested_id || (sound === 'none' ? 'silent' : s ? cleanTitle(s.name).replace(/[^A-Za-z0-9]/g, '').slice(0, 14).toLowerCase() : '') || 'cut1');
+  $('#idEcho').textContent = $('#id').value || '…';
+}
+
+/* ---------------------------------------------------------------- state */
+async function loadState() {
+  S = await api('/api/new'); S.takenIds = S.takenIds || [];
+  const cur = $('#song').value;
+  $('#song').innerHTML = (S.songs.length ? '' : '<option value="">no songs yet — add one</option>') +
+    S.songs.map(x => `<option value="${esc(x.src)}"${x.duration ? '' : ' disabled'}>${esc(x.name)}${x.duration ? ' — ' + mmss(x.duration) : ' — not readable as audio'}</option>`).join('');
+  const ok = S.songs.filter(x => x.duration);
+  $('#song').value = cur && ok.some(x => x.src === cur) ? cur : ok.length ? ok[0].src : '';
+  $('#briefsBox').hidden = !S.briefs.length;
+  $('#briefs').innerHTML = '<option value="">choose…</option>' + S.briefs.map(b => `<option>${esc(b)}</option>`).join('');
+  $('#lyrics').disabled = !S.whisper.available;
+  $('#lyricsMsg').textContent = S.whisper.available
+    ? 'Listens to the song on this computer to find where each sung line starts, so cuts can land there. Slow: about a minute for a four-minute song. The first use downloads a 0.5 GB model; the song is not uploaded.'
+    : 'Not available here: the optional faster-whisper package is not installed. Beats and sections work without it.';
+  const n = S.rules.length;
+  $('#rulesLine').textContent = n ? `${n} rule${n === 1 ? '' : 's'} appl${n === 1 ? 'ies' : 'y'} to this cut.` : 'No rules are switched on; the brief alone decides the look.';
+  $('#rulesToggle').hidden = !n;
+  $('#rules').innerHTML = S.rules.map(r => `<div class="rule">${esc(r.text)}${r.note && r.note !== r.text ? ` <small>(${esc(r.note)})</small>` : ''}</div>`).join('');
+  paintFootage(); paintSnap();
+}
+$('#rulesToggle').addEventListener('click', () => { const o = $('#rules').hidden; $('#rules').hidden = !o; $('#rulesToggle').textContent = o ? 'Hide' : 'View'; $('#rulesToggle').setAttribute('aria-expanded', o); });
+
+/* ---------------------------------------------------------------- footage */
+const chosenClips = () => S.clips.filter(c => (folders === null || folders.includes(c.folder)) && !exclude.has(c.src));
+function paintFootage() {
+  if (!S) return;
+  const c = chosenClips(), all = c.length === S.clips.length, secs = c.reduce((a, x) => a + (x.duration || 0), 0);
+  $('#footLine').innerHTML = !S.clips.length ? (S.scanning ? 'The library is still being indexed…' : 'There is no footage yet. Add a folder in the <a href="/#library" target="_top">Library tab</a>.')
+    : `${all ? 'All ' + c.length : c.length + ' of ' + S.clips.length} clips · ${dur(secs)} of footage the agent may draw on.` + (S.scanning ? ' Still indexing…' : '');
+  $('#footToggle').hidden = !S.clips.length;
+  if ($('#footBox').hidden) return;
+  $('#folders').innerHTML = S.folders.map(f => `<label class="fold"><input type="checkbox" data-f="${esc(f.path)}" ${folders === null || folders.includes(f.path) ? 'checked' : ''}>${esc(f.path)}<small>${f.count} clips · ${dur(f.seconds)}</small></label>`).join('');
+  $('#clips').innerHTML = S.clips.filter(c => folders === null || folders.includes(c.folder)).map(c =>
+    `<button class="clip${exclude.has(c.src) ? ' off' : ''}" data-src="${esc(c.src)}" title="${esc(c.src + (c.about ? ' — ' + c.about : ''))}" aria-pressed="${!exclude.has(c.src)}" style="background-image:url('${esc(c.poster || '')}')"><span>${esc(c.id)} · ${Math.round(c.duration)}s</span></button>`).join('');
+}
+function openFootage(on) { $('#footBox').hidden = !on; $('#footToggle').textContent = on ? 'Done' : 'Choose…'; $('#footToggle').setAttribute('aria-expanded', on); paintFootage(); }
+$('#footToggle').addEventListener('click', () => openFootage($('#footBox').hidden));
+$('#folders').addEventListener('change', () => { const all = S.folders.map(f => f.path), on = [...document.querySelectorAll('#folders input')].filter(i => i.checked).map(i => i.dataset.f); folders = on.length === all.length ? null : on; paintFootage(); changed(); });
+$('#clips').addEventListener('click', e => { const b = e.target.closest('.clip'); if (!b) return; const s = b.dataset.src; exclude.has(s) ? exclude.delete(s) : exclude.add(s); const top = $('#clips').scrollTop; paintFootage(); $('#clips').scrollTop = top; changed(); });
+
+/* ---------------------------------------------------------------- sound: a song, other audio, or none */
+function paintSound() {
+  const silent = sound === 'none';
+  document.querySelectorAll('#sound button').forEach(b => { b.classList.toggle('on', b.dataset.v === sound); b.setAttribute('aria-checked', b.dataset.v === sound); });
+  $('#soundHelp').textContent = { song: 'The cut is as long as the part of the song you use. A good part is already selected.',
+    audio: 'A voice-over, a reading, ambience: anything to cut to. Cuts follow its pauses and changes, not a beat.',
+    none: 'A silent cut. The pictures set the pace: say how long it is, and how long shots run under Options.' }[sound];
+  ['songRow', 'strip', 'under', 'songDetails'].forEach(k => { $('#' + k).hidden = silent; });
+  $('#silentBox').hidden = !silent; $('#pick').textContent = sound === 'audio' ? 'Add audio…' : 'Add a song…';
+  document.querySelectorAll('#quick button').forEach(b => b.classList.toggle('on', +b.dataset.v === num($('#howlong'), 0)));
+}
+$('#sound').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.v === sound) return;
+  sound = b.dataset.v; auto.snap = true; snap = defaultSnap(); stopPlay(); paintSound(); autoNames(); paintSnap(); draw(); changed(); });
+$('#quick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('#howlong').value = b.dataset.v; paintSound(); changed(); });
+$('#howlong').addEventListener('input', () => { paintSound(); changed(); });
+
+/* ---------------------------------------------------------------- song + analysis */
+async function songChanged() {
+  an = env = null; clearTimeout(anTimer); stopPlay(); draw(); autoNames();
+  const s = songInfo();
+  if (!s) { $('#stripMsg').textContent = S.songs.length ? 'Choose a song to see what the cut can snap to.' : 'Add a song to begin.'; $('#stripMsg').hidden = false; paintAnalysis(); return changed(); }
+  previewNote = ''; $('#play').disabled = false; $('#play').title = ''; $('#play').textContent = 'Play this part';
+  $('#au').src = '/api/new/audio?song=' + encodeURIComponent(s.src);
+  if (/\.aiff?$/i.test(s.src)) noPreview('AIFF cannot be played in the browser, so there is no preview. The cut itself is not affected.');
+  $('#stripMsg').textContent = 'Listening to the song…'; $('#stripMsg').hidden = false;
+  gotAnalysis(await api('/api/new/analyze', { song: s.src, lyrics: $('#lyrics').checked }));
+}
+function defaultWindow() {   // whole song under two minutes; else from the start to the change in the song nearest 90 s (30–120 s)
+  if (!an) return; let len = '';
+  if (an.duration > 120) { const ends = an.sections.map(s => s.t).filter(x => x >= 30 && x <= 120); len = +(ends.length ? ends.reduce((a, b) => Math.abs(b - 90) < Math.abs(a - 90) ? b : a) : 90).toFixed(2); }
+  $('#offset').value = 0; $('#length').value = len; winFor = $('#song').value;
+}
+function gotAnalysis(d) {
+  if (d.analysis) { an = d.analysis; env = d.envelope; $('#stripMsg').hidden = true; if (an.lyrics && an.lyrics.lines) $('#lyrics').checked = true; if (winFor !== $('#song').value) defaultWindow();
+    if (auto.snap) snap = defaultSnap();
+    if (snap === 'beats' && !an.beats.length) snap = an.sections.length ? 'sections' : 'free'; }
+  else if (d.state === 'failed' || d.error) { $('#stripMsg').textContent = 'Could not analyse this song: ' + (d.error || 'unknown error'); $('#stripMsg').hidden = false; }
+  const busy = d.state === 'running';
+  $('#songMsg').textContent = busy ? (d.lyrics ? `finding lyric lines… ${Math.round(d.elapsed || 0)} s` : 'analysing…') : previewNote;
+  if (busy) { clearTimeout(anTimer); anTimer = setTimeout(async () => gotAnalysis(await api('/api/new/analysis?song=' + encodeURIComponent($('#song').value))), 1500); }
+  paintAnalysis(); draw(); changed();
+}
+function paintAnalysis() {
+  if (!an) { $('#anNotes').innerHTML = ''; return; }
+  const t = an.tempo, ly = an.lyrics && an.lyrics.lines ? an.lyrics.lines.length : 0;
+  $('#anNotes').innerHTML = `<div style="color:var(--ink);margin-bottom:6px">What was found: ` + (t ? `${esc(t.bpm)} bpm (${esc(t.level)} confidence), ${esc(an.beats.length)} beats` : 'no steady beat') +
+    `, ${esc(an.sections.length)} changes in the song` + (ly ? `, ${esc(ly)} lyric lines` : '') + '.</div><ul class="plain">' +
+    (t && t.level === 'low' ? '<li class="warn">The beat grid is a guess for this song. Sections may be the safer thing to cut on.</li>' : '') +
+    (t ? `<li>The tempo may really be half or double${t.alternatives.length ? ' (also possible: ' + esc(t.alternatives.join(', ')) + ' bpm)' : ''}.</li>` : '') +
+    (an.sections.length ? '<li>Changes in the song are coarse: usually within a second or two of where you would mark them.</li>' : '') +
+    (ly ? '<li>Lyric lines come from speech recognition: words are often wrong on singing and two lines can run together.</li>' : '') +
+    an.missing.map(m => `<li>Not found: ${esc(m)}</li>`).join('') + (an.lyrics_error ? `<li class="err">${esc(an.lyrics_error)}</li>` : '') + '</ul>';
+  paintSnap();
+}
+function ruleHint() {
+  const r = S && S.cut_rule; if (!r || sound !== 'song') return '';
+  if (r.snap && r.snap !== snap) return `Your rule says cuts land on ${r.unit} boundaries. Rules win where they disagree with the brief, so the agent will follow the rule.`;
+  if (r.unit === 'bar') return 'Your rule says bar boundaries. Bars are not detected, so the markers are beats; the agent is given the rule and groups them itself.';
+  if (r.unit === 'line' && !(an && an.lyrics && an.lyrics.lines && an.lyrics.lines.length)) return 'Your rule says line boundaries, but no lyric lines have been found for this song: switch on “Find lyric lines” under the song’s Details, or sections are used instead.';
+  return r.snap ? `From your rule: cuts land on ${r.unit} boundaries.` : '';
+}
+const SNAPS = { beats: 'beats', lines: 'lyric lines', sections: 'sections', free: 'anywhere' };
+function paintSnap() {
+  const silent = sound === 'none', cur = silent ? 'free' : snap;
+  const have = { beats: !silent && !!(an && an.beats.length), lines: !silent && !!(an && an.lyrics && an.lyrics.lines && an.lyrics.lines.length), sections: !silent && !!(an && an.sections.length), free: true };
+  document.querySelectorAll('#snap button').forEach(b => { b.classList.toggle('on', b.dataset.v === cur); b.setAttribute('aria-checked', b.dataset.v === cur); b.disabled = (silent || !!an) && !have[b.dataset.v]; });
+  if (silent) { $('#structMsg').textContent = 'With no sound there is nothing to snap to: the shot length sets the pace.'; return; }
+  $('#structMsg').textContent = an && !have[snap] ? ({ lines: 'No lyric lines for this song yet — switch on “Find lyric lines” under the song’s Details, or choose another marker.', beats: 'No steady beat was found in this audio; its sections will be used instead.', sections: 'No sections were found in this song; another marker will be used.' }[snap] || '')
+    : ruleHint() || 'A guide for the agent, not a quota: it follows your outline and the music first.';
+}
+$('#snap').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; snap = b.dataset.v; auto.snap = false; paintSnap(); changed(); });
+$('#song').addEventListener('change', () => { winFor = null; $('#lyrics').checked = false; songChanged(); });   // lyric finding is slow: never carried over to another song
+$('#lyrics').addEventListener('change', async () => { if ($('#lyrics').checked && songInfo()) gotAnalysis(await api('/api/new/analyze', { song: $('#song').value, lyrics: true })); changed(); });
+async function addedSong(d) { $('#songMsg').textContent = ''; if (d.ok) { await loadState(); $('#song').value = d.src; winFor = null; $('#lyrics').checked = false; songChanged(); } else if (!d.cancelled) $('#songMsg').innerHTML = `<span class="err">${esc(d.error || 'could not add the song')}</span>`; }
+$('#pick').addEventListener('click', async () => { $('#pick').disabled = true; $('#songMsg').textContent = 'Look for the file chooser window…'; const d = await api('/api/new/song/pick', {}); $('#pick').disabled = false; addedSong(d); });
+$('#upload').addEventListener('click', () => $('#file').click());
+$('#file').addEventListener('change', async () => {
+  const f = $('#file').files[0]; if (!f) return; $('#songMsg').textContent = 'Copying ' + f.name + '…';
+  const r = await fetch('/api/new/song/upload?name=' + encodeURIComponent(f.name), { method: 'POST', body: f }); $('#file').value = ''; addedSong(await r.json().catch(() => ({ error: 'upload failed' })));
+});
+
+/* ---------------------------------------------------------------- the strip */
+const cv = $('#cv'), cx = cv.getContext('2d');
+function draw() {
+  const r = $('#strip').getBoundingClientRect(), dpr = window.devicePixelRatio || 1, W = Math.max(10, Math.round(r.width)), H = Math.round(r.height);
+  if (cv.width !== W * dpr || cv.height !== H * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, W, H);
+  if (!an) { $('#using').textContent = ''; return; }
+  const D = an.duration, X = t => t / D * W, w = win(), lyr = an.lyrics && an.lyrics.lines || [], top = lyr.length ? 22 : 6, bot = H - 20, mid = (top + bot) / 2, half = (bot - top) / 2;
+  const inWin = t => t >= w.off && t <= w.off + w.len;
+  if (env && env.level.length) {                       // loudness, mirrored
+    const n = env.level.length;
+    for (let x = 0; x < W; x++) {
+      const a = Math.floor(x / W * n), b = Math.max(a + 1, Math.floor((x + 1) / W * n)); let m = 0;
+      for (let i = a; i < b && i < n; i++) if (env.level[i] > m) m = env.level[i];
+      const h = Math.max(1, Math.pow(m / 255, 2.2) * half), t = (x + 0.5) / W * D;
+      cx.fillStyle = inWin(t) ? '#77746d' : '#3a3a3e'; cx.fillRect(x, mid - h, 1, 2 * h);
+    }
+  }
+  const every = Math.max(1, Math.ceil(3 / Math.max(0.01, (an.tempo ? an.tempo.period : 1) / D * W)));   // beats: keep ticks at least 3 px apart
+  cx.fillStyle = '#8d8a84'; an.beats.forEach((t, i) => { if (i % every === 0) cx.fillRect(Math.round(X(t)), bot + 2, 1, inWin(t) ? 7 : 3); });
+  cx.fillStyle = '#0c0c0d88'; (an.silences || []).forEach(([a, b]) => cx.fillRect(X(a), top, Math.max(1, X(b) - X(a)), bot - top));   // pauses
+  cx.fillStyle = '#e0a63a'; an.sections.forEach(s => { const x = Math.round(X(s.t)); cx.globalAlpha = inWin(s.t) ? 0.5 + 0.5 * s.strength : 0.3; cx.fillRect(x, top, 1, bot - top + 10); cx.beginPath(); cx.moveTo(x - 4, top); cx.lineTo(x + 5, top); cx.lineTo(x + 0.5, top + 6); cx.fill(); }); cx.globalAlpha = 1;
+  cx.font = '10px ui-monospace, Menlo, monospace'; cx.textBaseline = 'middle';
+  lyr.forEach(l => { const x0 = X(l.t0), x1 = Math.max(x0 + 2, X(l.t1)); cx.fillStyle = inWin(l.cut ?? l.t0) ? '#5fbf8a66' : '#5fbf8a2a'; cx.fillRect(x0, 4, x1 - x0 - 1, 14);
+    cx.save(); cx.beginPath(); cx.rect(x0, 4, x1 - x0 - 2, 14); cx.clip(); cx.fillStyle = '#ece7dc'; cx.fillText(l.text, x0 + 3, 11.5); cx.restore(); });
+  if (est && est.cuts && est.song === $('#song').value) { cx.fillStyle = '#fff'; est.cuts.forEach(c => cx.fillRect(Math.round(X(w.off + c)), top + 8, 1.5, bot - top - 8)); }
+  cx.fillStyle = '#0c0c0dcc'; cx.fillRect(0, 0, X(w.off), H); cx.fillRect(X(w.off + w.len), 0, W - X(w.off + w.len), H);       // outside the chosen part
+  cx.fillStyle = '#ece7dc'; cx.fillRect(Math.round(X(w.off)), 0, 1, H); cx.fillRect(Math.round(X(w.off + w.len)) - 1, 0, 1, H);
+  cx.fillStyle = '#8d8a84'; cx.textBaseline = 'alphabetic';
+  const stepT = [5, 10, 15, 30, 60, 120, 300].find(s => s / D * W >= 64) || 600;
+  for (let t = 0; t < D; t += stepT) cx.fillText(mmss(t), X(t) + 3, H - 3);
+  if (playT !== null) { cx.fillStyle = '#fff'; cx.fillRect(Math.round(X(playT)), 0, 2, H); }
+  const whole = w.off < 0.05 && w.len > D - 0.05;
+  $('#using').innerHTML = `<span style="color:var(--ink)">Using ${whole ? (sound === 'audio' ? 'all of it' : 'the whole song') : mmss(w.off) + '–' + mmss(w.off + w.len)} · ${dur(w.len)}` + (an.tempo ? ` · ${Math.round(+an.tempo.bpm)} bpm` : ' · no steady pulse') + '</span>' +
+    (w.len > 150 ? ' <span class="warn">· long for a first cut: slower and dearer to build</span>' : whole ? '' : ' · drag to change');
+}
+new ResizeObserver(draw).observe($('#strip'));
+function snapT(t, px) {   // snap a dragged edge to a nearby section or beat
+  if (!an) return t; const D = an.duration, W = $('#strip').clientWidth, tol = px / W * D; let best = t, bd = tol;
+  for (const c of [0, D, ...an.sections.map(s => s.t), ...an.beats]) { const d = Math.abs(c - t); if (d < bd) { bd = d; best = c; } }
+  return best;
+}
+let drag = null;
+const evT = e => { const r = $('#strip').getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (an ? an.duration : 0); };
+$('#strip').addEventListener('pointerdown', e => { if (!an) return; drag = { t: evT(e), moved: false }; $('#strip').setPointerCapture(e.pointerId); });
+$('#strip').addEventListener('pointermove', e => {
+  if (!an) return; const t = evT(e); $('#tip').hidden = false; $('#tip').textContent = mmss(t);
+  if (!drag) return; if (Math.abs(t - drag.t) / an.duration * $('#strip').clientWidth > 4) drag.moved = true;
+  if (drag.moved) { const a = snapT(Math.min(t, drag.t), 6), b = snapT(Math.max(t, drag.t), 6); $('#offset').value = +a.toFixed(2); $('#length').value = +(b - a).toFixed(2); draw(); }
+});
+$('#strip').addEventListener('pointerup', e => { if (!drag) return; const d = drag; drag = null; if (d.moved) changed(); else if (an) startPlay(evT(e)); });
+$('#strip').addEventListener('pointerleave', () => { $('#tip').hidden = true; });
+$('#whole').addEventListener('click', () => { $('#offset').value = 0; $('#length').value = ''; draw(); changed(); });
+$('#suggest').addEventListener('click', () => { defaultWindow(); if (an && an.duration <= 120) $('#songMsg').textContent = 'This song is short enough to use whole.'; draw(); changed(); });
+function stopPlay() { $('#au').pause(); playT = null; if (!$('#play').disabled) $('#play').textContent = 'Play this part'; }
+function startPlay(from) {
+  const au = $('#au'), w = win(); if (!au.getAttribute('src')) return; if (from === undefined || from < w.off || from >= w.off + w.len) from = w.off;
+  au.currentTime = from; au.play().catch(() => {}); $('#play').textContent = 'Stop';
+  const tick = () => { if (au.paused) return; playT = au.currentTime; const ww = win(); if (playT >= ww.off + ww.len) { stopPlay(); draw(); return; } draw(); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+$('#play').addEventListener('click', () => { if ($('#au').paused) startPlay(); else { stopPlay(); draw(); } });
+$('#au').addEventListener('ended', () => { stopPlay(); draw(); });
+// Some formats the cut can use cannot be played by the browser (AIFF, for one). Say so instead of a dead button.
+let previewNote = '';
+function noPreview(why) { stopPlay(); previewNote = why; $('#play').disabled = true; $('#play').textContent = 'No preview'; $('#play').title = why; $('#songMsg').textContent = why; }
+$('#au').addEventListener('error', () => { if ($('#au').getAttribute('src')) noPreview('This browser cannot play this format, so there is no preview. The cut itself is not affected.'); });
+
+/* ---------------------------------------------------------------- the bar: one sentence, or the one thing that is missing */
+function changed() { $('#idEcho').textContent = $('#id').value.trim() || '…'; saveDraft(); $('#over').hidden = !dirty(); want++; clearTimeout(estTimer); estTimer = setTimeout(estimate, 300); }
+let want = 0, shown = 0;   // an answer to an older question never overwrites a newer one
+function goTo(where) {   // scroll to the thing that is missing and put the cursor in it
+  let el = $(where); if (!el) return;
+  if (where === '#id') $('#options').open = true;
+  if (where === '#footToggle' && S.clips.length) { openFootage(true); el = $('#folders input') || el; }
+  if (where === '#offset') $('#songDetails').open = true;
+  el.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); el.focus({ preventScroll: true });
+}
+function whatIsMissing(d) {   // [text, selector] for the first thing in the way, in the order of the steps
+  const b = brief(), ps = d.problems || [], find = re => ps.find(p => re.test(p));
+  let p;
+  if (sound === 'none') { p = find(/at least|at most/); if (p) return [p.replace(/\.$/, ''), '#howlong']; }
+  else {
+    if (!S.songs.some(x => x.duration)) return ['Add a song — or choose “No sound” if this cut has none', '#pick'];
+    if (!b.song) return ['Choose a song', '#song'];
+    p = find(/song is missing|cannot be read/); if (p) return [p.replace(/\.$/, ''), '#song'];
+  }
+  p = find(/still being analysed/); if (p) return ['The song is still being analysed — one moment', null];
+  p = find(/offset|at least/); if (p) return [p.replace(/\.$/, ''), '#offset'];
+  p = find(/footage|library/i); if (p) return [S.clips.length ? 'Choose some footage' : p.replace(/\.$/, ''), S.clips.length ? '#footToggle' : null];
+  if (find(/brief is empty/)) return ['Write a line about what this cut is', '#intent'];
+  p = find(/\bid\b|already exist/); if (p) return [p.replace(/\.$/, ''), '#id'];
+  return ps.length ? [ps[0].replace(/\.$/, ''), null] : null;
+}
+async function estimate() {
+  if (!S) return; const my = want, b = brief(); let d = await api('/api/new/estimate', { brief: b }); d.song = b.song;
+  if (my !== want) return;
+  for (let i = 0; i < 20 && auto.id && (d.problems || []).some(p => /already exist/.test(p)); i++) {   // an id we chose ourselves is taken: take the next
+    S.takenIds.push(b.id); autoNames(); b.id = $('#id').value; d = await api('/api/new/estimate', { brief: b }); d.song = b.song; if (my !== want) return; }
+  est = d; shown = my; missing = whatIsMissing(d);
+  const nr = S.rules.length, snapWord = SNAPS[d.snap || snap], running = job && job.state === 'running';
+  if (running) $('#sum').innerHTML = `<span class="hint">${job.kind === 'newcut' ? 'The agent is building ' + esc(job.timeline) + '.' : 'Another job is running; you can build when it has finished.'}</span>`;
+  else if (missing) $('#sum').innerHTML = missing[1] ? `<a href="#" id="fix">${esc(missing[0])}</a> <span class="hint">— then you can build.</span>` : `<span class="warn">${esc(missing[0])}.</span>`;
+  else $('#sum').innerHTML = `About ${esc(d.shots)} shots over ${dur(+d.duration)}, ${cutWords()}, from ${esc(d.clips)} clips` + (nr ? `, following ${nr} rule${nr === 1 ? '' : 's'}.` : '.') +
+    (d.notes || []).map(n => ` <span class="hint">${esc(n)}</span>`).join('');
+  $('#build').disabled = !d.ok || started || running;
+  $('#optSum').textContent = b.id ? `· “${b.title || b.id}”, ${cutWords().replace(' (your rule)', '')}, about ${$('#modeCount').checked && b.structure.shots ? b.structure.shots + ' shots' : b.structure.avg_shot + ' s a shot'}` : '';
+  const ok1 = sound === 'none' ? b.length >= 5 : !!(b.song && an); $('#s1').classList.toggle('ok', ok1); $('#r1').classList.toggle('ok', ok1);
+  const foot = d.clips > 0; $('#s2').classList.toggle('ok', foot); $('#r2').classList.toggle('ok', foot);
+  const txt = !!(b.intent.trim() || b.outline.trim()); $('#s3').classList.toggle('ok', txt); $('#r3').classList.toggle('ok', txt);
+  $('#sum3').textContent = txt ? '' : 'the one thing only you can supply';
+  paintSnap(); draw();
+}
+$('#sum').addEventListener('click', e => { if (e.target.id !== 'fix') return; e.preventDefault(); if (missing && missing[1]) goTo(missing[1]); });
+document.querySelectorAll('.rail a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); $(a.getAttribute('href')).scrollIntoView({ block: 'start' }); goTo({ '#s1': sound === 'none' ? '#howlong' : '#song', '#s2': '#footToggle', '#s3': '#intent' }[a.getAttribute('href')]); }));
+['id', 'title', 'intent', 'outline', 'offset', 'length', 'fadeout', 'avg', 'count'].forEach(k => $('#' + k).addEventListener('input', () => {
+  if (k === 'id' || k === 'title') auto[k] = !$('#' + k).value.trim() ? true : false;
+  if (k === 'count' && $('#count').value) $('#modeCount').checked = true; if (k === 'avg') $('#modeAvg').checked = true;
+  if (k === 'offset' || k === 'length') { winFor = $('#song').value; draw(); } changed(); }));
+['id', 'title'].forEach(k => $('#' + k).addEventListener('blur', () => { if (auto[k]) { autoNames(); changed(); } }));
+['modeAvg', 'modeCount'].forEach(k => $('#' + k).addEventListener('change', changed));
+$('#eg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const t = $('#intent'); t.value = t.value.trim() ? t.value.replace(/\s*$/, '\n') + b.dataset.t : b.dataset.t; t.focus(); changed(); });
+$('#briefs').addEventListener('change', async () => { const id = $('#briefs').value; if (!id) return; const b = await api('/api/new/brief?id=' + encodeURIComponent(id)); $('#briefs').value = '';
+  if (b && b.id) { auto = { id: false, title: false, snap: false }; fill(b); winFor = $('#song').value; flash('Opened the brief saved ' + (b.saved_at || '').replace('T', ' ') + '. To build it again it needs a new id.'); songChanged(); } });
+let flashT; function flash(html, ms) { clearTimeout(flashT); $('#sum').innerHTML = html; flashT = setTimeout(estimate, ms || 5000); }
+$('#save').addEventListener('click', async () => { const d = await api('/api/new/brief', { brief: brief() }); if (d.ok) { await loadState(); flash(`Saved as “${esc(d.brief.id)}”. Reopen it any time under Options.`); } else flash(`<span class="err">${esc(d.error)}</span>`); });
+$('#showPrompt').addEventListener('click', async () => { const d = await api('/api/new/prompt', { brief: brief() }); $('#dlgPre').textContent = d.ok ? d.prompt : 'The prompt cannot be put together yet: ' + (d.error || ''); $('#dlg').showModal(); });
+$('#dlgClose').addEventListener('click', () => $('#dlg').close());
+
+/* ---------------------------------------------------------------- build: the estimate lives in the confirm step */
+function paintConfirm() {
+  const d = est || {}, p = d.past || { runs: 0, minutes: [], costs: [] }, agent = d.agent || 'your agent', b = brief();
+  $('#cTitle').textContent = `Build the first cut of “${b.title || b.id}”?`;
+  $('#cLine').innerHTML = `This is the heaviest thing cutvelvet does: your agent (<span class="mono">${esc(agent)}</span>) builds about ${esc(d.shots)} shots by itself, and it is billed to your own agent account. ` +
+    (p.runs ? `Earlier first cuts here took ${esc(p.minutes.map((m, i) => m + ' min' + (p.costs.length === p.minutes.length ? ' ($' + (+p.costs[i]).toFixed(2) + ')' : '')).join(', '))}.` : 'There is no time or cost estimate yet, because no first cut has been built in this project; expect many minutes.') + ' You can cancel while it runs.';
+  let h = '<ul class="plain">';
+  h += `<li>It looks through ${esc(d.clips)} clips (${dur(+d.clip_seconds || 0)}) as ${esc(d.sheets)} contact sheet${d.sheets === 1 ? '' : 's'}, then picks a clip and a moment for each shot.</li>`;
+  h += `<li>It places and checks every shot with single frames — roughly ${esc(d.images)} images in all. Images are what cost the most.</li>`;
+  h += `<li>It renders one draft${d.render_minutes ? ` (about ${esc(d.render_minutes)} min on this machine)` : ''} on your CPU and publishes it as version 1 in Review.</li>`;
+  h += '<li>It writes a line per shot saying what it chose, its weak spots, and footage it wished it had.</li>';
+  h += `<li>cutvelvet cannot see prices.${p.runs && !p.costs.length ? ' Your agent did not report a cost for earlier runs.' : ''} This run’s time${p.costs.length || !p.runs ? ' and cost, if reported,' : ''} will be recorded for next time.</li>`;
+  h += '</ul>';
+  $('#est').innerHTML = h;
+  const cp = S.custom_prompt;   // the project's own instructions for the agent: used only once approved on this machine
+  $('#ownBox').hidden = !cp;
+  if (cp) { $('#ownOk').checked = !!cp.approved; $('#ownOk').disabled = !!cp.approved; $('#ownPre').textContent = cp.preview + (cp.preview.length >= 1500 ? '\n…' : '');
+    $('#ownSay').textContent = cp.approved ? 'This project’s own instructions for the agent are in use (you approved them on this computer).' : 'Use this project’s own instructions for the agent, shown below, instead of the standard ones. Leave this off unless you trust where the project came from.'; }
+}
+$('#build').addEventListener('click', () => { if (!est || !est.ok) return; paintConfirm(); $('#cMore').open = false; $('#confirm').showModal(); $('#cGo').focus(); });
+$('#cCancel').addEventListener('click', () => $('#confirm').close());
+$('#cGo').addEventListener('click', async () => {
+  $('#confirm').close(); const b = brief(); $('#build').disabled = true; started = true; sawRun = true;
+  $('#sum').innerHTML = '<span class="hint">Preparing the footage sheets and starting the agent…</span>';
+  const cp = S.custom_prompt;
+  if (cp && !cp.approved && $('#ownOk').checked) { await api('/api/agent/prompt', { name: cp.name, digest: cp.digest }); await loadState(); }   // approve exactly the text that was shown
+  const d = await api('/api/new/start', { brief: b });
+  if (!d.ok) { started = false; flash(`<span class="err">${esc(d.error || 'could not start')}</span>`, 8000); return; }
+  store.set(draftKey, null); $('#scroll').scrollTop = 0; pollRun();
+});
+$('#cancel').addEventListener('click', async () => { if (confirm('Stop the agent? Work it has not published is kept in the timeline file but may be unfinished.')) { await api('/api/run/cancel', {}); pollRun(); } });
+async function pollRun() {
+  clearTimeout(runTimer);
+  let d; try { d = await (await fetch('/api/run')).json(); } catch (e) { runTimer = setTimeout(pollRun, 4000); return; }
+  const was = job; job = d; const mine = d.kind === 'newcut', running = d.state === 'running';
+  if (running && mine) sawRun = true;
+  $('#jobBox').hidden = !(mine && sawRun);          // a first cut finished in an earlier visit is old news: Review has it
+  if (!$('#jobBox').hidden) {
+    $('#jobChip').className = 'chip ' + d.state;
+    $('#jobText').textContent = running ? `Building the first cut of ${d.timeline} — ${mmss(d.elapsed)}. You can leave this view; it keeps going.` : `First cut of ${d.timeline}: ${d.state}${d.error ? ' — ' + d.error : ''}`;
+    $('#cancel').hidden = !running;
+    const tail = (d.tail || []).join('\n'), pre = $('#tail'), stick = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 8;
+    if (pre.textContent !== tail) { pre.textContent = tail; if (stick) pre.scrollTop = pre.scrollHeight; }
+    const done = !running && d.new_version;
+    $('#jobDone').hidden = running; $('#changes').hidden = !(done && d.changes);
+    if (done) { $('#jobDone').innerHTML = `<b>${esc(d.new_version)}</b> is ready to watch. <a href="/#review" target="_top" id="openReview">Open it in Review</a>`; $('#changes').textContent = d.changes || ''; }
+    else if (!running) $('#jobDone').innerHTML = `<span class="warn">No version was published. The log is at <span class="mono">${esc(d.log || '')}</span>; whatever the agent wrote is still in the timeline file.</span>`;
+  }
+  if (was && was.state === 'running' && !running) { started = false; tell({ cutvelvetNew: { state: d.state, timeline: d.timeline, version: d.new_version || null } }); await loadState(); if (mine && d.new_version) { auto.id = auto.title = true; autoNames(); } }
+  if (!was || was.state !== d.state) estimate();
+  runTimer = setTimeout(pollRun, running ? 2000 : 15000);
+}
+document.addEventListener('click', e => { if (e.target.id === 'openReview') tell({ cutvelvetNew: { open: job && job.new_version } }); });
+
+/* ---------------------------------------------------------------- closing: back to where you were, draft kept */
+function closeView() { saveDraft(); stopPlay(); if (parent !== window) tell({ cutvelvetNew: { close: true } }); else location.href = '/'; }
+$('#close').addEventListener('click', closeView);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+  const a = document.activeElement;
+  if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return a.blur();   // first Esc leaves the field, the next one closes
+  closeView();
+});
+
+const HELP = { title: 'New cut',
+  what: 'Start a cut from nothing: choose the sound (a song, usually), the footage, and say what the cut is about. Your own agent then builds a first version for you to review and give notes on.',
+  how: ['Sound: pick a song or add one. A good part of it is already selected; drag on the strip to use a different part, click it to listen. A song is not required: choose “Other audio” for a voice or ambience, or “No sound” for a silent cut of a length you set.',
+    'Footage: everything in your library is used unless you choose otherwise.',
+    'What it’s about: a few lines in your own words. This is the only step that needs you.',
+    'Press Build first cut. The steps can be done in any order, and nothing is needed under Options.'],
+  keys: [['Esc', 'leave a text box; again to close New cut']],
+  when: [['Build first cut', 'asks once, then starts your own coding agent on this computer. It looks through the footage, builds the cut shot by shot, checks its own frames, renders a draft and publishes it as version 1 in Review. You can keep using the other tabs, and cancel it.'],
+    ['What it costs', 'cutvelvet is free; the agent is billed to your own agent account. This is the heaviest job there is: longer cuts and bigger libraries cost more. After the first run, the time (and cost, if your agent reports it) is shown before you build.'],
+    ['Closing', 'the × or Esc takes you back to where you were. What you filled in is kept as a draft and is there when you come back; “Start over” clears it.'],
+    ['Save for later', 'stores the brief in the project (timelines/briefs) so it can be reopened under Options. Nothing is built.'],
+    ['Options', 'names the cut, chooses what cuts land on and how long shots are, and shows the rules that apply. The defaults are fine for a first try.'],
+    ['An existing cut', 'is never overwritten; a new cut always gets its own id.']] };
+
+(async function init() {
+  tell({ cutvelvetHelp: { tab: 'new', help: HELP } });
+  await loadState(); snap = defaultSnap(); paintSound();
+  draftKey = 'cutvelvet.newdraft:' + S.project.dir;
+  const want = new URLSearchParams(location.search).get('id'), d = store.get(draftKey);
+  if (want) { const b = await api('/api/new/brief?id=' + encodeURIComponent(want)); if (b && b.id) { auto = { id: false, title: false, snap: false }; fill(b); winFor = $('#song').value; } }
+  else if (d && d.song !== undefined) { auto = Object.assign({ id: true, title: true, snap: false }, d.auto); fill(d); winFor = d.winFor && d.winFor === $('#song').value ? d.winFor : null; }
+  await songChanged(); pollRun();
+})();
+</script>
+</body>
+</html>

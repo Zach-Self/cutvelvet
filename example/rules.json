@@ -1,0 +1,185 @@
+{
+ "rules": [
+  {
+   "id": "no-repeats",
+   "text": "Never use the same moment of footage twice.",
+   "on": true,
+   "kind": "preset",
+   "group": "Cutting",
+   "check": "audit"
+  },
+  {
+   "id": "cut-on-music",
+   "text": "Cuts land on the music's bar boundaries.",
+   "on": true,
+   "kind": "preset",
+   "group": "Cutting",
+   "template": "Cuts land on the music's {unit} boundaries.",
+   "params": {
+    "unit": {
+     "type": "choice",
+     "value": "bar",
+     "options": [
+      "beat",
+      "bar",
+      "line",
+      "phrase"
+     ]
+    }
+   }
+  },
+  {
+   "id": "max-shot",
+   "text": "No shot is longer than 8 seconds.",
+   "on": false,
+   "kind": "preset",
+   "group": "Cutting",
+   "template": "No shot is longer than {n} seconds.",
+   "params": {
+    "n": {
+     "type": "number",
+     "value": 8
+    }
+   }
+  },
+  {
+   "id": "min-shot",
+   "text": "No shot is shorter than 1 seconds.",
+   "on": false,
+   "kind": "preset",
+   "group": "Cutting",
+   "template": "No shot is shorter than {n} seconds.",
+   "params": {
+    "n": {
+     "type": "number",
+     "value": 1
+    }
+   }
+  },
+  {
+   "id": "people-treatment",
+   "text": "People are shown in black and white.",
+   "on": true,
+   "kind": "preset",
+   "group": "Colour",
+   "template": "People are shown in {treatment}.",
+   "params": {
+    "treatment": {
+     "type": "choice",
+     "value": "black and white",
+     "options": [
+      "black and white",
+      "full colour",
+      "a muted, desaturated grade",
+      "a warm grade",
+      "a cold grade"
+     ]
+    }
+   }
+  },
+  {
+   "id": "accent-colours",
+   "text": "Use no more than 1 accent colour(s) per timeline.",
+   "on": false,
+   "kind": "preset",
+   "group": "Colour",
+   "template": "Use no more than {n} accent colour(s) per timeline.",
+   "params": {
+    "n": {
+     "type": "number",
+     "value": 1
+    }
+   }
+  },
+  {
+   "id": "titles-only",
+   "text": "No on-screen text except title cards.",
+   "on": false,
+   "kind": "preset",
+   "group": "Text"
+  },
+  {
+   "id": "no-lyrics",
+   "text": "Do not put lyrics on screen.",
+   "on": false,
+   "kind": "preset",
+   "group": "Text"
+  },
+  {
+   "id": "always-show",
+   "text": "Every shot includes a face.",
+   "on": false,
+   "kind": "preset",
+   "group": "Framing",
+   "template": "Every shot includes {subject}.",
+   "params": {
+    "subject": {
+     "type": "choice",
+     "value": "a face",
+     "options": [
+      "a face",
+      "a pair of eyes",
+      "hands",
+      "a wide establishing view"
+     ]
+    }
+   }
+  },
+  {
+   "id": "no-macro",
+   "text": "No extreme close-ups.",
+   "on": false,
+   "kind": "preset",
+   "group": "Framing"
+  },
+  {
+   "id": "off-centre",
+   "text": "Keep faces off-centre.",
+   "on": false,
+   "kind": "preset",
+   "group": "Framing"
+  },
+  {
+   "id": "max-panels",
+   "text": "No more than 3 panels on screen at once.",
+   "on": false,
+   "kind": "preset",
+   "group": "Framing",
+   "template": "No more than {n} panels on screen at once.",
+   "params": {
+    "n": {
+     "type": "number",
+     "value": 3
+    }
+   }
+  },
+  {
+   "id": "same-cast",
+   "text": "Keep the same stand-in for each character throughout.",
+   "on": false,
+   "kind": "preset",
+   "group": "Cast"
+  },
+  {
+   "id": "library-only",
+   "text": "Only use clips already in the library; do not download footage.",
+   "on": false,
+   "kind": "preset",
+   "group": "Footage"
+  },
+  {
+   "id": "pins-exact",
+   "text": "Use pinned clips exactly as pinned: that clip, from that moment.",
+   "on": false,
+   "kind": "preset",
+   "group": "Footage"
+  },
+  {
+   "id": "minimal-change",
+   "text": "Change only what the notes ask for.",
+   "on": true,
+   "kind": "preset",
+   "group": "Process"
+  }
+ ]
+}

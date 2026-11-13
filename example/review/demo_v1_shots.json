@@ -1,0 +1,44 @@
+[
+ {
+  "id": "S1",
+  "name": "Moon over the village",
+  "t0": 0.0,
+  "t1": 4.625
+ },
+ {
+  "id": "S2",
+  "name": "He rows, eyes down",
+  "t0": 4.625,
+  "t1": 8.75
+ },
+ {
+  "id": "S3",
+  "name": "She looks up",
+  "t0": 8.75,
+  "t1": 13.0
+ },
+ {
+  "id": "S4",
+  "name": "Two faces",
+  "t0": 13.0,
+  "t1": 17.375
+ },
+ {
+  "id": "S5",
+  "name": "Hands on the reeds, her look",
+  "t0": 17.375,
+  "t1": 21.875
+ },
+ {
+  "id": "S6",
+  "name": "In the pew, his eyes and hers",
+  "t0": 21.875,
+  "t1": 26.25
+ },
+ {
+  "id": "S7",
+  "name": "Morning",
+  "t0": 26.25,
+  "t1": 30.0
+ }
+]

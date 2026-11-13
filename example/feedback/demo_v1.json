@@ -1,0 +1,25 @@
+{
+ "version": "demo_v1",
+ "overall": "Slow and quiet is right. Keep every cut on a bar line.",
+ "shots": {
+  "S2": {
+   "verdict": "fix",
+   "note": "[0:06.7] let his eyes sit alone a little longer before the oars come in"
+  },
+  "S4": {
+   "verdict": "keep",
+   "note": ""
+  },
+  "S6": {
+   "verdict": "fix",
+   "note": "[0:23.0] crop is on his forehead — want the eyes",
+   "pins": [
+    {
+     "src": "footage/pew.mp4",
+     "ss": 2.5,
+     "comment": "he looks up here"
+    }
+   ]
+  }
+ }
+}

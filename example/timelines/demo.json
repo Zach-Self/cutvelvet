@@ -1,0 +1,59 @@
+{
+ "id": "demo",
+ "title": "Two Humans",
+ "duration": 30.0,
+ "audio": {"src": "music/gymnopedie-1.mp3", "start": 0, "fadeout": 3.5},
+ "fx": {"fade": {"in": 1.2, "out": 1.5}},
+ "shots": [
+  {"id": "S1", "label": "Moon over the village", "t0": 0, "t1": 4.625,
+   "panels": [
+    {"src": "footage/moon-village.mp4", "ss": 0.3, "t0": 0, "t1": 4.625, "rect": [160, 230, 1600, 480], "region": [0.5, 0.33, 1.0], "grade": "bw", "expo": 1.5, "speed": 1.0, "zoom": [1.0, 1.06], "tin": ["fade", 1.5]}
+   ],
+   "texts": [
+    {"text": "Two Humans", "t0": 1.86, "t1": 4.5, "pos": [960, 800], "size": 96, "font": "didot_i", "anchor": "c", "fade": 1.0, "stagger": 0.045, "rise": 14, "fadeout": 0.5}
+   ],
+   "fx": {}},
+  {"id": "S2", "label": "He rows, eyes down", "t0": 4.625, "t1": 8.75,
+   "panels": [
+    {"src": "footage/his-eyes-boat.mp4", "ss": 0.5, "t0": 4.625, "t1": 8.75, "rect": [460, 260, 1000, 230], "region": [0.47, 0.6, 0.5], "grade": "bw", "expo": 1.5, "vig": 0.15, "speed": 0.8, "zoom": [1.0, 1.06], "tin": ["lid", 0.6]},
+    {"src": "footage/oars.mp4", "ss": 0.5, "t0": 6.66, "t1": 8.75, "rect": [260, 520, 1400, 300], "region": [0.48, 0.57, 0.9], "grade": "bw", "expo": 1.0, "speed": 1.0, "zoom": [1.0, 1.04], "tin": ["lid", 0.5]}
+   ],
+   "texts": [],
+   "fx": {}},
+  {"id": "S3", "label": "She looks up", "t0": 8.75, "t1": 13.0,
+   "panels": [
+    {"src": "footage/her-boat.mp4", "ss": 2.0, "t0": 8.75, "t1": 13.0, "rect": [200, 140, 840, 800], "region": [0.48, 0.45, 0.75], "grade": "bw", "expo": 1.0, "speed": 1.0, "zoom": [1.0, 1.06], "tin": ["wipeL", 0.5]},
+    {"src": "footage/her-boat.mp4", "ss": 3.39, "t0": 10.1, "t1": 13.0, "rect": [1100, 455, 620, 170], "region": [0.48, 0.36, 0.3], "grade": "bw", "expo": 1.0, "speed": 1.0, "zoom": [1.0, 1.04], "tin": ["lid", 0.5]}
+   ],
+   "texts": [],
+   "fx": {}},
+  {"id": "S4", "label": "Two faces", "t0": 13.0, "t1": 17.375,
+   "panels": [
+    {"src": "footage/his-face.mp4", "ss": 0.5, "t0": 13.0, "t1": 17.375, "rect": [300, 140, 620, 800], "region": [0.44, 0.52, 0.55], "grade": "bw", "expo": 1.0, "speed": 0.8, "zoom": [1.0, 1.08], "tin": ["lid", 0.6]},
+    {"src": "footage/her-cafe.mp4", "ss": 1.5, "t0": 13.7, "t1": 17.375, "rect": [1000, 140, 620, 800], "region": [0.57, 0.42, 0.5], "grade": "bw", "expo": 1.0, "speed": 0.8, "zoom": [1.0, 1.08], "tin": ["lid", 0.6]}
+   ],
+   "texts": [],
+   "fx": {}},
+  {"id": "S5", "label": "Hands on the reeds, her look", "t0": 17.375, "t1": 21.875,
+   "panels": [
+    {"src": "footage/hands-reeds.mp4", "ss": 0.5, "t0": 17.375, "t1": 21.875, "rect": [360, 160, 1200, 360], "region": [0.45, 0.42, 0.9], "grade": "bw", "expo": 1.4, "speed": 1.0, "zoom": [1.0, 1.06], "tin": ["wipeL", 0.5]},
+    {"src": "footage/her-look.mp4", "ss": 1.0, "t0": 19.69, "t1": 21.875, "rect": [360, 560, 1200, 360], "region": [0.38, 0.47, 0.6], "grade": "bw", "expo": 1.0, "speed": 1.0, "zoom": [1.0, 1.04], "tin": ["lid", 0.5]}
+   ],
+   "texts": [],
+   "fx": {}},
+  {"id": "S6", "label": "In the pew, his eyes and hers", "t0": 21.875, "t1": 26.25,
+   "panels": [
+    {"src": "footage/pew.mp4", "ss": 0.3, "t0": 21.875, "t1": 26.25, "rect": [560, 300, 800, 200], "region": [0.26, 0.21, 0.32], "grade": "bw", "expo": 1.1, "vig": 0.15, "speed": 1.0, "zoom": [1.0, 1.04], "tin": ["lid", 0.5]},
+    {"src": "footage/pew.mp4", "ss": 0.3, "t0": 22.64, "t1": 26.25, "rect": [560, 580, 800, 200], "region": [0.76, 0.36, 0.32], "grade": "bw", "expo": 1.1, "vig": 0.15, "speed": 1.0, "zoom": [1.0, 1.04], "tin": ["lid", 0.5]}
+   ],
+   "texts": [],
+   "fx": {}},
+  {"id": "S7", "label": "Morning", "t0": 26.25, "t1": 30.0,
+   "panels": [
+    {"src": "footage/sunrise.mp4", "ss": 3.5, "t0": 26.25, "t1": 30.0, "rect": [260, 150, 1400, 300], "region": [0.44, 0.36, 0.9], "grade": "bw", "expo": 1.2, "speed": 1.0, "zoom": [1.0, 1.06], "tin": ["fade", 0.8]},
+    {"src": "footage/her-waking.mp4", "ss": 4.6, "t0": 26.91, "t1": 30.0, "rect": [260, 480, 1400, 450], "region": [0.55, 0.37, 0.7], "grade": "bw", "expo": 1.0, "speed": 1.0, "zoom": [1.0, 1.05], "tin": ["lid", 0.8]}
+   ],
+   "texts": [],
+   "fx": {}}
+ ]
+}

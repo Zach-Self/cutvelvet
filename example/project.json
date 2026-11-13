@@ -1,0 +1,14 @@
+{
+ "name": "Two Humans (example)",
+ "canvas": [
+  1920,
+  1080
+ ],
+ "fps": 24,
+ "library": [
+  "footage"
+ ],
+ "timelines": "timelines",
+ "cache": ".cutvelvet/cache",
+ "out": "renders"
+}
